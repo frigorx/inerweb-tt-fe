@@ -519,7 +519,7 @@ function closePhotoModal(){document.getElementById('photoModal').classList.remov
 function doLogin(){
   const token=document.getElementById('tokenInput').value.trim().toUpperCase();
   if(!token){document.getElementById('loginError').style.display='block';return;}
-  if(token==='DEMO'||token==='TEST'){loadDemoData();saveLocal();startApp();toast('Mode démo activé','ok');return;}
+  if(token==='DEMO'||token==='TEST'||token==='demo'){loadDemoData();saveLocal();startApp();toast('Mode démo activé','ok');return;}
   cfg.token=token;
   cfg.apiUrl='https://script.google.com/macros/s/AKfycbzEbzLo57x0u0k2wjAzyLdZ42iVZdHdOwmPd5Ioe6fjApuSftuSckZ9svKpajbyjEuhVg/exec';
   verifyToken(token);
@@ -874,6 +874,10 @@ document.addEventListener('DOMContentLoaded',()=>{
         <p style="font-size:.75rem;color:#999">Si vous n'avez pas votre badge, demandez à votre enseignant.</p>
       </div>`;
     return;
+  }
+  // Mode démo via URL ?demo=1
+  if(params.get('demo')==='1'){
+    loadDemoData();saveLocal();startApp();toast('Mode démo activé','ok');return;
   }
   const tokenParam=params.get('token')||params.get('eleve');
   // Mode preview prof : charger depuis sessionStorage

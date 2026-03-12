@@ -557,8 +557,55 @@ async function login(){
   hideSpinner();
 }
 
+/* ── Mode démo admin ── */
+function loadAdminDemo(){
+  ADMIN_KEY='[DEMO]';
+  users=[
+    {id:'U1',nom:'HENNINOT',prenom:'Frédéric',email:'f.henninot@raynaud.fr',role:'ADMIN',classes:'["CAP IFCA 1","CAP IFCA 2","1ère MFER","Term MFER","2nde TNE"]',actif:true},
+    {id:'U2',nom:'MARTIN',prenom:'Sophie',email:'s.martin@raynaud.fr',role:'ENSEIGNANT',classes:'["CAP IFCA 1","CAP IFCA 2"]',actif:true},
+    {id:'U3',nom:'BERNARD',prenom:'Paul',email:'p.bernard@raynaud.fr',role:'ENSEIGNANT',classes:'["1ère MFER","Term MFER"]',actif:true},
+    {id:'U4',nom:'DUPONT',prenom:'Marie',email:'m.dupont@raynaud.fr',role:'LECTURE',classes:'["2nde TNE"]',actif:true}
+  ];
+  eleves=[
+    {code:'ELV-001',nom:'DUPONT',prenom:'Martin',classe:'CAP IFCA 1'},
+    {code:'ELV-002',nom:'MARTIN',prenom:'Léa',classe:'CAP IFCA 2'},
+    {code:'ELV-003',nom:'GARCIA',prenom:'Tom',classe:'1ère MFER'},
+    {code:'ELV-004',nom:'BERNARD',prenom:'Emma',classe:'Term MFER'},
+    {code:'ELV-005',nom:'PETIT',prenom:'Lucas',classe:'2nde TNE'},
+    {code:'ELV-006',nom:'ROUX',prenom:'Camille',classe:'CAP IFCA 1'}
+  ];
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('mainContent').classList.add('active');
+  const badge=document.getElementById('connStatus');
+  badge.textContent='🟢 Démo Admin';
+  badge.style.background='rgba(243,156,18,.3)';
+  renderUsers();
+  // Peupler le sélecteur d'élèves pour les tokens
+  const sel=document.getElementById('tokenEleve');
+  sel.innerHTML='<option value="">— Sélectionner un élève —</option>'+
+    eleves.map(e=>`<option value="${esc(e.code)}">${esc(e.nom)} ${esc(e.prenom)} (${esc(e.code)})</option>`).join('');
+  // Journal fictif
+  document.getElementById('logList').innerHTML=[
+    {timestamp:new Date(Date.now()-3600000*2).toISOString(),action:'Connexion admin',target:'f.henninot@raynaud.fr',actor:'admin'},
+    {timestamp:new Date(Date.now()-86400000).toISOString(),action:'Ajout utilisateur',target:'s.martin@raynaud.fr',actor:'admin'},
+    {timestamp:new Date(Date.now()-86400000*3).toISOString(),action:'Rotation clé maître',target:'master_key',actor:'admin'}
+  ].map(l=>`<div class="log-item"><span class="log-time">${new Date(l.timestamp).toLocaleString('fr-FR')}</span> <span class="log-action">${esc(l.action)}</span> <span>${esc(l.target)}</span> <span style="color:var(--gris)">par ${esc(l.actor)}</span></div>`).join('');
+  if(typeof renderGuideConfig==='function')renderGuideConfig();
+  toast('Mode démo — données fictives chargées','ok');
+  // Bandeau démo
+  const banner=document.createElement('div');
+  banner.style.cssText='position:fixed;top:48px;left:50%;transform:translateX(-50%);background:#f39c12;color:#333;font-weight:900;font-size:.65rem;padding:.15rem 1rem;border-radius:0 0 6px 6px;z-index:300;letter-spacing:1px;';
+  banner.textContent='MODE DÉMO';
+  document.body.appendChild(banner);
+}
+
 /* ── Auto-login depuis sessionStorage ── */
 window.onload=function(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('demo')==='1'){
+    loadAdminDemo();
+    return;
+  }
   const savedKey=sessionStorage.getItem('admin_key');
   if(savedKey){
     document.getElementById('adminKey').value=savedKey;

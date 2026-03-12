@@ -236,7 +236,7 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
     </svg>
     <div class="hdr-txt"><p style="margin:0;font-size:.7rem;opacity:.8">Espace tuteur</p></div>
   </div>
-  <span class="hdr-badge">Bac Pro MFER</span>
+  <span class="hdr-badge" id="hdrBadge">Filière Énergétique</span>
 </header>
 
 <!-- ═══ PAGE 0 : BIENVENUE ═══ -->
@@ -261,7 +261,7 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
         </svg>
       </div>
       <h2>Bienvenue, tuteur de stage !</h2>
-      <p>Merci d'accueillir un stagiaire en formation<br><strong>Bac Pro Métiers du Froid et des Énergies Renouvelables</strong><br>au sein de votre entreprise.</p>
+      <p>Merci d'accueillir un stagiaire en formation<br><strong>Filière Énergétique</strong> (CAP IFCA, Bac Pro MFER ou 2nde TNE)<br>au sein de votre entreprise.</p>
     </div>
 
     <div class="card">
@@ -524,9 +524,34 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
 <div class="spin-ov" id="spinOv"><div class="spinner"></div></div>
 
 <script>
-/* ═══ RÉFÉRENTIEL PFMP — Bac Pro MFER ═══ */
-/* Compétences évaluées par le tuteur en PFMP */
-const COMP_E31=[
+/* ═══ ARCHITECTURE MULTI-FILIÈRE TUTEUR ═══ */
+
+/* --- CAP IFCA : compétences PFMP (EP3 pratique) --- */
+const COMP_CAP=[
+  {code:"C4.1",nom:"Tirer au vide",   full:"Tirer au vide le circuit frigorifique",              obl:true},
+  {code:"C4.2",nom:"Manipuler fluide",full:"Manipuler le fluide frigorigène et les huiles",       obl:true},
+  {code:"C4.3",nom:"Étanchéité",      full:"Contrôler l'étanchéité d'un circuit",                obl:true},
+  {code:"C4.4",nom:"Identifier panne",full:"Identifier la panne",                                obl:false},
+  {code:"C4.5",nom:"Mesurer",         full:"Mesurer et comparer des grandeurs",                  obl:true},
+  {code:"C4.6",nom:"Régler",          full:"Régler les organes de régulation",                   obl:true},
+  {code:"C4.7",nom:"Raccorder",       full:"Raccorder les équipements de charge et mesure",       obl:true},
+  {code:"C5.1",nom:"Remplacer",       full:"Remplacer un composant",                             obl:true},
+  {code:"C1.1",nom:"Compléter docs",  full:"Compléter et transmettre des documents",             obl:true},
+];
+const TACHES_CAP={
+  "C4.1":["Groupe de tirage connecté correctement","Vide atteint (< 200 µm Hg)","Durée de pompage respectée"],
+  "C4.2":["EPI mis en place","Récupération fluide réalisée","Charge en phase liquide correcte"],
+  "C4.3":["Test d'étanchéité réalisé","Absence de fuite confirmée","Méthode conforme"],
+  "C4.4":["Symptômes identifiés","Composant défectueux localisé","Cause racine déterminée"],
+  "C4.5":["Appareils de mesure connectés","Mesures relevées et consignées","Valeurs comparées aux données fabricant"],
+  "C4.6":["Paramètres de régulation vérifiés","Réglages conformes"],
+  "C4.7":["Manomètres connectés correctement","Absence de fuite aux raccords","Déconnexion sans perte de fluide"],
+  "C5.1":["Composant remplacé correctement","Test de fonctionnement réalisé","Remise en service conforme"],
+  "C1.1":["Documents complétés correctement","Informations transmises","Vocabulaire technique adapté"],
+};
+
+/* --- Bac Pro MFER : compétences E31 (réalisation & mise en service) --- */
+const COMP_MFER=[
   {code:"C3.1",nom:"Organiser poste",    full:"Organiser le poste de travail et la zone d'intervention",  obl:true},
   {code:"C3.2",nom:"Implanter",          full:"Implanter les équipements et supportages",                 obl:true},
   {code:"C3.3",nom:"Façonner tubes",     full:"Façonner les réseaux de tubes (cuivre, acier, PER)",       obl:true},
@@ -540,8 +565,7 @@ const COMP_E31=[
   {code:"C5.2",nom:"Remplacer",          full:"Remplacer un composant défectueux",                        obl:false},
   {code:"C1.2",nom:"Communiquer",        full:"Rédiger les comptes rendus d'intervention",                obl:true},
 ];
-
-const TACHES={
+const TACHES_MFER={
   "C3.1":["Zone de travail sécurisée (EPI portés)","Outillage adapté à la tâche","Zone rangée et propre en fin d'intervention"],
   "C3.2":["Implantation conforme au plan","Supports correctement fixés","Niveaux et aplombs respectés"],
   "C3.3":["Cintrage correct sans écrasement","Coupes d'équerre et ébavurées","Tubes non détériorés"],
@@ -555,6 +579,53 @@ const TACHES={
   "C5.2":["Composant remplacé correctement","Test de fonctionnement réalisé","Remise en service conforme"],
   "C1.2":["Compte rendu complet","Vocabulaire technique adapté","Communication professionnelle"],
 };
+
+/* --- 2nde TNE : modules de découverte (pas d'EP, stage d'observation) --- */
+const COMP_TNE=[
+  {code:"CT.1",nom:"Découvrir métiers",  full:"Découvrir les métiers du froid et de l'énergie",           obl:true},
+  {code:"CT.2",nom:"Sécurité",          full:"Appliquer les règles de sécurité de base",                obl:true},
+  {code:"CT.3",nom:"Outillage",         full:"Identifier et utiliser l'outillage courant",              obl:true},
+  {code:"CT.4",nom:"Mesures de base",   full:"Réaliser des mesures simples (tension, pression, température)",obl:true},
+  {code:"CT.5",nom:"Lecture de plans",  full:"Lire un plan ou schéma simple",                           obl:true},
+  {code:"CT.6",nom:"Travail en équipe", full:"Travailler en équipe et communiquer",                     obl:true},
+  {code:"CT.7",nom:"Gestes de base",    full:"Réaliser des gestes techniques élémentaires",             obl:true},
+  {code:"CT.8",nom:"Comportement pro",  full:"Adopter un comportement professionnel",                    obl:true},
+];
+const TACHES_TNE={
+  "CT.1":["Nommer les principaux métiers du secteur","Décrire une activité observée en entreprise","Identifier les formations correspondantes"],
+  "CT.2":["Porter les EPI adaptés","Identifier les risques sur le poste","Appliquer les consignes de sécurité"],
+  "CT.3":["Reconnaître les outils courants","Utiliser un outil correctement","Ranger le poste après usage"],
+  "CT.4":["Utiliser un multimètre (tension)","Lire un manomètre (pression)","Relever une température"],
+  "CT.5":["Identifier les symboles de base","Localiser un composant sur un plan","Suivre un circuit simple"],
+  "CT.6":["Communiquer avec l'équipe","Participer activement","Rendre compte oralement"],
+  "CT.7":["Couper un tube correctement","Réaliser un cintrage simple","Raccorder un accessoire"],
+  "CT.8":["Être ponctuel","Respecter les consignes","Avoir une attitude professionnelle"],
+};
+
+/* --- Détection filière et accès dynamique --- */
+const FILIERES_TUTEUR={
+  'CAP_IFCA': {nom:'CAP IFCA', abrege:'CAP IFCA', epreuve:'EP3', comps:COMP_CAP, taches:TACHES_CAP},
+  'BAC_MFER': {nom:'Bac Pro MFER', abrege:'Bac Pro MFER', epreuve:'E31', comps:COMP_MFER, taches:TACHES_MFER},
+  'TNE':      {nom:'2nde TNE', abrege:'2nde TNE', epreuve:'Modules', comps:COMP_TNE, taches:TACHES_TNE},
+};
+
+function getFiliereTuteur(classe){
+  const cl=(classe||'').toLowerCase();
+  if(cl.includes('cap')||cl.includes('ifca')) return 'CAP_IFCA';
+  if(cl.includes('mfer')||cl.includes('bac')||cl.includes('1ère')||cl.includes('term')) return 'BAC_MFER';
+  if(cl.includes('tne')||cl.includes('2nde')) return 'TNE';
+  return 'BAC_MFER'; // fallback
+}
+function getActiveComps(){
+  const fil=getFiliereTuteur(eleveData?.classe);
+  return FILIERES_TUTEUR[fil]||FILIERES_TUTEUR['BAC_MFER'];
+}
+function updateBadge(){
+  const b=document.getElementById('hdrBadge');
+  if(!b||!eleveData) return;
+  const f=getActiveComps();
+  b.textContent=f.abrege+' — '+f.epreuve;
+}
 
 const COMPORTEMENTS=[
   {ico:"⏰",key:"ponctualite",txt:"Ponctualité & assiduité",
@@ -769,7 +840,7 @@ async function chargerEleve(code,token){
     // Mode hors-ligne — on permet la saisie locale
     eleveCode=code;
     tuteurToken=token;
-    eleveData={code,nom:'Stagiaire',prenom:code,classe:'Bac Pro MFER'};
+    eleveData={code,nom:'Stagiaire',prenom:code,classe:''};
     toast('Hors-ligne — données seront envoyées plus tard','warn');
   }
   evalData={};behavData={};
@@ -792,13 +863,14 @@ function renderStagiaireInfo(){
       <div class="stag-av">${esc(ini)}</div>
       <div>
         <div class="stag-nom">${esc(s.nom)} ${esc(s.prenom)}</div>
-        <div class="stag-meta">${esc(s.classe||'Bac Pro MFER')}</div>
+        <div class="stag-meta">${esc(s.classe||'Classe inconnue')}</div>
         <div class="stag-meta" style="margin-top:.2rem">Tuteur : ${esc(tuteurs[0]?.nom||'—')} · ${esc(entreprise.nom||'Entreprise')}</div>
       </div>
     </div>`;
+  updateBadge();
 }
 
-/* ═══ RENDU ÉVALUATION E31 ═══ */
+/* ═══ RENDU ÉVALUATION (dynamique multi-filière) ═══ */
 const sid=c=>c.replace(/\./g,'_'); // C3.1 → C3_1 (IDs sans points)
 
 function renderEval(){
@@ -818,13 +890,23 @@ function renderEval(){
   </div>`;
   c.innerHTML=legendHtml;
   
-  COMP_E31.forEach(comp=>{
+  const actif=getActiveComps();
+  const compsActives=actif.comps;
+  const tachesActives=actif.taches;
+
+  // Titre section avec nom filière
+  const titreFiliere=document.createElement('div');
+  titreFiliere.style.cssText='text-align:center;font-size:.78rem;font-weight:800;color:var(--teal);margin-bottom:.5rem;padding:.4rem;background:var(--teal2);border-radius:8px;';
+  titreFiliere.textContent='📋 '+actif.nom+' — Épreuve '+actif.epreuve;
+  c.appendChild(titreFiliere);
+
+  compsActives.forEach(comp=>{
     const id=sid(comp.code);
     if(!evalData[comp.code])evalData[comp.code]={niveau:'NE',taches:{}};
     const niv=evalData[comp.code].niveau||'NE';
     const isLocked=compLocks[comp.code]||false;
     const hasValue=niv&&niv!=='NE';
-    const taches=TACHES[comp.code]||[];
+    const taches=tachesActives[comp.code]||[];
     const tachesHtml=taches.map((t,i)=>{
       const st=evalData[comp.code].taches[i];
       const onclick=isLocked?'':("cycleTache('"+comp.code+"',"+i+",this)");
@@ -997,24 +1079,24 @@ async function envoyer(){
   }catch(e){
     hideSpinner();
     // Sauvegarder en local pour envoi ultérieur
-    const pending=safeParse(localStorage.getItem('inerweb-mfer-tuteur-pending'),[]);
+    const pending=safeParse(localStorage.getItem('inerweb-tt-fe-tuteur-pending'),[]);
     pending.push({eleve:eleveCode,tuteur:tuteurToken,payload});
-    localStorage.setItem('inerweb-mfer-tuteur-pending',JSON.stringify(pending));
+    localStorage.setItem('inerweb-tt-fe-tuteur-pending',JSON.stringify(pending));
     toast('Sauvegardé hors-ligne — envoi au prochain réseau','warn');
   }
 }
 
 /* ═══ PERSISTANCE LOCALE ═══ */
 function sauvegarderLocal(){
-  localStorage.setItem('inerweb-mfer-tuteur-data',JSON.stringify({entreprise,tuteurs}));
+  localStorage.setItem('inerweb-tt-fe-tuteur-data',JSON.stringify({entreprise,tuteurs}));
   // Sauvegarder les locks par élève
   if(eleveCode){
-    localStorage.setItem('inerweb-mfer-tuteur-locks-'+eleveCode,JSON.stringify(compLocks));
-    localStorage.setItem('inerweb-mfer-tuteur-eval-'+eleveCode,JSON.stringify(evalData));
+    localStorage.setItem('inerweb-tt-fe-tuteur-locks-'+eleveCode,JSON.stringify(compLocks));
+    localStorage.setItem('inerweb-tt-fe-tuteur-eval-'+eleveCode,JSON.stringify(evalData));
   }
 }
 function chargerLocal(){
-  const d=safeParse(localStorage.getItem('inerweb-mfer-tuteur-data'),{});
+  const d=safeParse(localStorage.getItem('inerweb-tt-fe-tuteur-data'),{});
   if(d.entreprise){
     entreprise=d.entreprise;
     document.getElementById('entNom').value=entreprise.nom||'';
@@ -1037,8 +1119,8 @@ function chargerLocal(){
   }
 }
 function chargerLocksEleve(code){
-  compLocks=safeParse(localStorage.getItem('inerweb-mfer-tuteur-locks-'+code),{});
-  const savedEval=safeParse(localStorage.getItem('inerweb-mfer-tuteur-eval-'+code),{});
+  compLocks=safeParse(localStorage.getItem('inerweb-tt-fe-tuteur-locks-'+code),{});
+  const savedEval=safeParse(localStorage.getItem('inerweb-tt-fe-tuteur-eval-'+code),{});
   if(Object.keys(savedEval).length)evalData=savedEval;
 }
 
@@ -1059,6 +1141,38 @@ function toggleLegende(){
   arr.classList.toggle('open');
 }
 
+/* ═══ MODE DÉMO TUTEUR ═══ */
+function loadTuteurDemo(){
+  // Données fictives entreprise
+  entreprise={nom:'Climafroid SARL',adresse:'45 avenue de la Réfrigération',cp:'13008',ville:'Marseille',dirigeant:'Marie Dupont',tels:['04 91 00 00 00','06 12 34 56 78'],emails:['contact@climafroid.fr']};
+  tuteurs=[{nom:'Jean Martin',tel:'06 98 76 54 32',email:'j.martin@climafroid.fr'}];
+  // Remplir les champs entreprise
+  document.getElementById('entNom').value=entreprise.nom;
+  document.getElementById('entAdresse').value=entreprise.adresse;
+  document.getElementById('entCP').value=entreprise.cp;
+  document.getElementById('entVille').value=entreprise.ville;
+  document.getElementById('entDirigeant').value=entreprise.dirigeant;
+  // Données fictives élève
+  eleveCode='ELV-001';
+  tuteurToken='[DEMO]';
+  eleveData={code:'ELV-001',nom:'DUPONT',prenom:'Martin',classe:'CAP IFCA 1',entreprise_nom:'Climafroid SARL',tuteur_nom:'Jean Martin'};
+  evalData={};behavData={};
+  // Pré-remplir quelques évaluations CAP IFCA pour montrer l'interface
+  evalData['C4.1']={niveau:'M',taches:{0:true,1:true,2:true}};
+  evalData['C4.3']={niveau:'EC',taches:{0:true,1:false,2:false}};
+  evalData['C4.5']={niveau:'NA',taches:{0:false,1:false,2:false}};
+  behavData={ponctualite:3,tenue:2,relations:3,initiative:1,consignes:2,progression:2};
+  // Afficher
+  renderStagiaireInfo();renderEval();renderBehav();renderTuteurDocs();
+  goPage('eval');
+  toast('Mode démo — données fictives chargées','ok');
+  // Bandeau démo
+  const banner=document.createElement('div');
+  banner.style.cssText='position:fixed;top:58px;left:50%;transform:translateX(-50%);background:#f39c12;color:#333;font-weight:900;font-size:.65rem;padding:.15rem 1rem;border-radius:0 0 6px 6px;z-index:300;letter-spacing:1px;';
+  banner.textContent='MODE DÉMO';
+  document.body.appendChild(banner);
+}
+
 /* ═══ INIT ═══ */
 // Ajouter champs par défaut
 addTel();addEmail();addTuteur();
@@ -1066,9 +1180,13 @@ addTel();addEmail();addTuteur();
 chargerLocal();
 // Deep-link
 const _p=new URLSearchParams(window.location.search);
+
+// MODE DÉMO : charger directement les données fictives
+if(_p.get('demo')==='1'){
+  loadTuteurDemo();
+}
 // Sécurité : vérifier que ce n'est pas un QR élève scanné par erreur
-if(_p.get('role')==='eleve'){
-  // Mauvais QR : afficher un message d'erreur dans la page bienvenue
+else if(_p.get('role')==='eleve'){
   document.getElementById('page-bienvenue').querySelector('.page-inner').innerHTML=`
     <div style="text-align:center;padding:3rem 1.5rem;max-width:400px;margin:0 auto">
       <div style="font-size:3rem;margin-bottom:.5rem">🚫</div>
@@ -1080,14 +1198,13 @@ if(_p.get('role')==='eleve'){
   // Mode preview prof : charger directement en page évaluation
   eleveCode=_p.get('eleve');
   tuteurToken=_p.get('tuteur')||'PREVIEW';
-  eleveData={code:eleveCode,nom:'Aperçu',prenom:'prof',classe:'Bac Pro MFER'};
-  // Charger documents partagés depuis sessionStorage
+  eleveData={code:eleveCode,nom:'Aperçu',prenom:'prof',classe:_p.get('classe')||''};
   try{const pd=safeParse(sessionStorage.getItem('inerwebPreviewTuteur'),{});tuteurSharedDocs=pd.sharedDocs||[];}catch(e){}
   renderStagiaireInfo();renderEval();renderBehav();renderTuteurDocs();
   goPage('eval');
   toast('Mode aperçu (vue prof)','ok');
 } else if(_p.get('eleve')){
-  const d=safeParse(localStorage.getItem('inerweb-mfer-tuteur-data'),{});
+  const d=safeParse(localStorage.getItem('inerweb-tt-fe-tuteur-data'),{});
   if(d.entreprise?.nom&&d.tuteurs?.[0]?.nom){
     entreprise=d.entreprise;tuteurs=d.tuteurs;
     chargerEleve(_p.get('eleve'),_p.get('tuteur')||_p.get('token')||'');
