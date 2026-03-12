@@ -368,10 +368,15 @@ input, select, textarea, button { font-family:inherit; }
         </ul>
       </div>
       <div class="photo-counter">Aujourd'hui : <strong id="photoCountToday">0</strong> / 10 photos</div>
+      <div style="display:flex;gap:.5rem;margin-bottom:.4rem">
+        <button class="btn btn-violet" style="flex:1;font-size:.82rem" onclick="document.getElementById('cameraInput').click()">📸 Prendre une photo</button>
+        <button class="btn btn-ghost" style="flex:1;font-size:.82rem" onclick="document.getElementById('uploadInput').click()">🖼️ Galerie</button>
+      </div>
       <div class="upload-zone" id="uploadZone" onclick="document.getElementById('uploadInput').click()">
         <div class="upload-zone-ico">📷</div>
         <div class="upload-zone-txt"><strong>Clique</strong> ou glisse tes photos ici</div>
       </div>
+      <input type="file" id="cameraInput" class="upload-input" accept="image/*" capture="environment" onchange="handleFiles(this.files)">
       <input type="file" id="uploadInput" class="upload-input" accept="image/*" multiple onchange="handleFiles(this.files)">
       <div class="upload-preview" id="uploadPreview"></div>
       <div class="form-group">
@@ -418,7 +423,7 @@ const TYPE_LBL={activite:'🔧 Activité',observation:'👁️ Observation',ques
 
 let cfg={apiUrl:'',token:''};
 let eleve=null,journal=[],evals={},pendingPhotos=[],sharedDocs=[],eleveDocs=[],activites=[],eleveNotes={},copiesCachees=[];
-const SK='inerweb-mfer-eleve-v2',MAX_PHOTOS_DAY=10,MAX_PHOTO_SIZE=200*1024;
+const SK='inerweb-tt-fe-eleve-v2',MAX_PHOTOS_DAY=10,MAX_PHOTO_SIZE=200*1024;
 
 /* ═══ SÉCURITÉ : échappement HTML anti-XSS ═══ */
 function esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -557,7 +562,11 @@ async function syncCloud(){
       const p=new URLSearchParams({action:'addJournalEntry',token:cfg.token,eleve:eleve.code,entry:JSON.stringify(entry)});
       const r=await fetch(`${cfg.apiUrl}?${p}`,{redirect:'follow'});
       const d=await r.json();
-      if(d.success)entry.synced=true;
+      if(d.ok||d.success){
+        entry.synced=true;
+        // Remplacer les base64 locales par les URLs Drive retournées
+        if(d.photoUrls&&d.photoUrls.length){entry.photos=d.photoUrls;}
+      }
     }
     saveLocal();renderJournal();toast('Synchronisé ✓','ok');
   }catch(err){console.error('Sync error:',err);toast('Erreur sync','err');}
