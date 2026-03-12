@@ -3694,6 +3694,21 @@ function loadDemoData(){
     {epreuve:'E31',competence:'C3.6',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date().toISOString(),phase:'formatif',contexte:'pfmp1'},
   ];
   notes['ELV-001']={E31:{note_finale:null,cloture:false},E32:{note_finale:null,cloture:false},E33:{note_finale:null,cloture:false}};
+  // Photos fictives SVG pour la démo
+  const _dp=function(txt,bg,ico){return 'data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="'+bg+'"/><text x="200" y="130" text-anchor="middle" font-size="64">'+ico+'</text><text x="200" y="190" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#fff">'+txt+'</text><text x="200" y="215" text-anchor="middle" font-family="sans-serif" font-size="11" fill="rgba(255,255,255,0.7)">Photo stage - demo</text></svg>');};
+  const now=Date.now();
+  // Journal PFMP avec photos pour ELV-001, ELV-003, ELV-006
+  pfmpData['ELV-001']={journal:[
+    {id:'pj1',date:new Date(now-86400000*2).toISOString(),type:'activite',text:'Mise en service clim split R32 chez un client. Tirage au vide + charge.',photos:[_dp('Clim split R32','#2d5a8c','\\u2744\\ufe0f'),_dp('Manometres HP/BP','#16a085','\\ud83d\\udd27')],synced:true},
+    {id:'pj2',date:new Date(now-86400000*3).toISOString(),type:'activite',text:'Brasure forte cuivre 3/8 sur circuit frigorifique.',photos:[_dp('Brasure cuivre','#e67e22','\\ud83d\\udd25')],synced:true},
+    {id:'pj3',date:new Date(now-86400000*5).toISOString(),type:'observation',text:'Visite du local technique. Beaucoup de machines a decouvrir.',photos:[_dp('Local technique','#8e44ad','\\u26a1'),_dp('Compresseur scroll','#27ae60','\\u2699\\ufe0f'),_dp('Tableau electrique','#c0392b','\\ud83d\\udce1')],synced:true},
+  ]};
+  pfmpData['ELV-003']={journal:[
+    {id:'pj4',date:new Date(now-86400000*1).toISOString(),type:'activite',text:'Raccordement electrique PAC air/eau.',photos:[_dp('PAC air-eau','#1abc9c','\\ud83c\\udf21\\ufe0f')],synced:true},
+  ]};
+  pfmpData['ELV-006']={journal:[
+    {id:'pj5',date:new Date(now-86400000*1).toISOString(),type:'activite',text:'Premier jour : decouverte de l atelier.',photos:[_dp('Atelier','#3498db','\\ud83c\\udfed')],synced:true},
+  ]};
   window.students=students;window.validations=validations;
   cur='ELV-001';updateAll();
 }

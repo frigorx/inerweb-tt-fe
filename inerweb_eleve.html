@@ -547,7 +547,21 @@ function loadDemoData(){
   eleve={code:'ELV-DEMO',nom:'DUPONT',prenom:'Martin',classe:'Bac Pro MFER 1',entreprise_nom:'Climafroid SARL',tuteur_nom:'Jean Martin',pfmp_debut:'2026-01-06',pfmp_fin:'2026-02-14'};
   evals={E31:{'C1.2':'EC','C3.1':'M','C3.2':'EC','C3.3':'NA','C3.4':'NE','C3.5':'NE','C3.6':'EC','C3.7':'NE','C3.8':'M','C3.9':'NE'},E32:{'C4.1':'NE','C4.2':'NE','C4.3':'EC','C4.4':'NE','C4.5':'NA','C4.6':'NE','C4.7':'NE','C5.1':'NE','C1.1':'EC'}};
   const now=new Date(),y=now.getFullYear(),m=now.getMonth(),d=now.getDate();
-  journal=[{id:'d1',date:new Date(y,m,d-2,14,30).toISOString(),type:'activite',text:'Première mise en service d\'une clim split avec Jean. J\'ai appris à vérifier les pressions.',photos:[],synced:true},{id:'d2',date:new Date(y,m,d-3,16,0).toISOString(),type:'observation',text:'Les clients posent beaucoup de questions sur la consommation électrique.',photos:[],synced:true},{id:'d3',date:new Date(y,m,d-4,9,0).toISOString(),type:'reflexion',text:'Premier jour de stage ! L\'équipe est sympa, j\'ai hâte d\'apprendre.',photos:[],synced:true}];
+  // Photos fictives SVG pour la démo
+  const _dp=function(txt,bg,ico){return 'data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="'+bg+'"/><text x="200" y="130" text-anchor="middle" font-size="64">'+ico+'</text><text x="200" y="190" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#fff">'+txt+'</text><text x="200" y="215" text-anchor="middle" font-family="sans-serif" font-size="11" fill="rgba(255,255,255,0.7)">Photo de démonstration</text></svg>');};
+  const demoPhotos={
+    clim:_dp('Installation clim split','#2d5a8c','❄️'),
+    mano:_dp('Relevé manomètres','#16a085','🔧'),
+    brasure:_dp('Brasure cuivre','#e67e22','🔥'),
+    tableau:_dp('Tableau électrique','#8e44ad','⚡'),
+    tirage:_dp('Tirage au vide','#27ae60','💨'),
+  };
+  journal=[
+    {id:'d1',date:new Date(y,m,d-2,14,30).toISOString(),type:'activite',text:'Première mise en service d\'une clim split avec Jean. J\'ai appris à vérifier les pressions HP et BP.',photos:[demoPhotos.clim,demoPhotos.mano],synced:true},
+    {id:'d2',date:new Date(y,m,d-3,16,0).toISOString(),type:'activite',text:'Brasure cuivre sur le circuit frigorifique. J\'ai réussi ma première brasure forte !',photos:[demoPhotos.brasure],synced:true},
+    {id:'d3',date:new Date(y,m,d-4,9,0).toISOString(),type:'observation',text:'Les clients posent beaucoup de questions sur la consommation électrique.',photos:[demoPhotos.tableau],synced:true},
+    {id:'d4',date:new Date(y,m,d-5,10,0).toISOString(),type:'reflexion',text:'Premier jour de stage ! L\'équipe est sympa, j\'ai hâte d\'apprendre.',photos:[],synced:true}
+  ];
 }
 
 function doLogout(){if(confirm('Te déconnecter ?')){localStorage.removeItem(SK);location.reload();}}
