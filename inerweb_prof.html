@@ -453,10 +453,10 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
         <div class="stat-card"><div class="stat-num" id="statClos" style="color:var(--vert)">—</div><div class="stat-lbl">Clôturés</div></div>
         <div class="stat-card"><div class="stat-num" id="statActifs" style="color:var(--teal)">—</div><div class="stat-lbl">En stage</div></div>
       </div>
-      <div class="filter-bar">
-        <label>Filtrer :</label>
-        <select id="dashFiltreClasse" onchange="renderDash()">
-          <option value="all">Toutes classes</option>
+      <div class="filter-bar" style="align-items:center;gap:.5rem;flex-wrap:wrap">
+        <label style="font-weight:700;color:var(--bleu)">📚 Classe :</label>
+        <select id="dashFiltreClasse" onchange="renderDash()" style="font-weight:700;min-width:160px">
+          <option value="" disabled>— Choisir une classe —</option>
         </select>
         <select id="dashFiltreAnnee" onchange="renderDash()">
           <option value="all">Toutes années</option>
@@ -910,8 +910,8 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
         <button class="btn btn-primary" onclick="saveAppConfig()">💾 Enregistrer</button>
       </div>
       <div class="card">
-        <div class="card-title">⚖️ Composition des jurys</div>
-        <p style="font-size:.75rem;color:var(--gris);margin-bottom:.75rem;">Définissez les membres du jury pour chaque contexte d'évaluation.</p>
+        <div class="card-title">👥 Évaluateurs & Commissions CCF</div>
+        <p style="font-size:.75rem;color:var(--gris);margin-bottom:.75rem;">Gérez votre pool d'évaluateurs et créez des commissions pour affecter les jurys aux élèves par épreuve.</p>
         <div id="juryContainer"></div>
       </div>
       <div class="card">
@@ -1678,18 +1678,32 @@ function setPhase(ph){
 /** Peuple les sélecteurs de classe à partir des classes réellement présentes */
 function populateClassFilters() {
   const cls = [...new Set(students.map(s => s.classe).filter(Boolean))].sort();
-  ['dashFiltreClasse','filtreClasse'].forEach(id => {
-    const sel = document.getElementById(id);
-    if (!sel) return;
-    const val = sel.value;
-    sel.innerHTML = '<option value="all">Toutes classes</option>' +
+  // Dashboard : classe obligatoire (pas de "Toutes classes")
+  const dashSel = document.getElementById('dashFiltreClasse');
+  if (dashSel) {
+    const prev = dashSel.value;
+    dashSel.innerHTML = '<option value="" disabled>— Choisir une classe —</option>' +
       cls.map(c => {
         const fil = getFiliere({classe: c});
         const color = FILIERES[fil]?.couleur || '#6c757d';
         return `<option value="${c}" style="color:${color}">${c}</option>`;
       }).join('');
-    sel.value = val;
-  });
+    // Restaurer ou sélectionner la 1ère classe
+    if (prev && cls.includes(prev)) dashSel.value = prev;
+    else if (cls.length) dashSel.value = cls[0];
+  }
+  // Onglet Élèves : garder "Toutes classes"
+  const filtSel = document.getElementById('filtreClasse');
+  if (filtSel) {
+    const prev = filtSel.value;
+    filtSel.innerHTML = '<option value="all">Toutes classes</option>' +
+      cls.map(c => {
+        const fil = getFiliere({classe: c});
+        const color = FILIERES[fil]?.couleur || '#6c757d';
+        return `<option value="${c}" style="color:${color}">${c}</option>`;
+      }).join('');
+    filtSel.value = prev;
+  }
 }
 
 /* ═══ [E] DASHBOARD ═══ */
@@ -1700,9 +1714,17 @@ function renderDash(){
     ['statTotal','statAlertes','statClos','statActifs'].forEach(id=>document.getElementById(id).textContent='0');
     return;
   }
+  const dClasse=document.getElementById('dashFiltreClasse')?.value||'';
   const dAnnee=document.getElementById('dashFiltreAnnee')?.value||'all';
   const dGroupe=document.getElementById('dashFiltreGroupe')?.value||'all';
+  // Classe obligatoire
+  if(!dClasse){
+    g.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">📚</div><p style="font-size:1.1rem;font-weight:700">Sélectionnez une classe ci-dessus</p><p style="color:var(--gris);font-size:.85rem">Chaque classe a ses élèves, ses compétences et ses radars</p></div>';
+    ['statTotal','statAlertes','statClos','statActifs'].forEach(id=>document.getElementById(id).textContent='—');
+    return;
+  }
   const filteredStudents=students.filter(s=>{
+    if(s.classe!==dClasse)return false;
     if(dAnnee!=='all'&&String(s.annee||1)!==dAnnee)return false;
     if(dGroupe!=='all'&&(s.groupe||'')!==dGroupe)return false;
     return true;
@@ -1712,24 +1734,52 @@ function renderDash(){
     ['statTotal','statAlertes','statClos','statActifs'].forEach(id=>document.getElementById(id).textContent='0');
     return;
   }
-  let al=0,cl=0,ac=0,journalAlerts=0;
+  // Déterminer la filière de la classe sélectionnée
+  const filKey=getFiliere({classe:dClasse});
+  const fil=FILIERES[filKey];
+  const epreuves=fil?.epreuves||[];
+  const filColor=fil?.couleur||'#6c757d';
+  // Bandeau filière
+  const bannerHtml=`<div style="grid-column:1/-1;display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem;background:${filColor}12;border-left:3px solid ${filColor};border-radius:6px;margin-bottom:.2rem">
+    <span style="font-weight:800;color:${filColor}">${fil?.abrege||filKey}</span>
+    <span style="color:var(--gris);font-size:.75rem">·</span>
+    <span style="font-size:.75rem;color:#555">${epreuves.join(' · ')||'Modules CT'}</span>
+    <span style="margin-left:auto;font-size:.7rem;color:var(--gris)">${filteredStudents.length} élève${filteredStudents.length>1?'s':''}</span>
+  </div>`;
+
+  let al=0,cl=0,ac=0;
   const cards=filteredStudents.map(s=>{
     const v=validations[s.code]||[];
-    const e2done=new Set(v.filter(x=>x.epreuve==='E31').map(x=>x.competence)).size;
-    const e3done=new Set(v.filter(x=>x.epreuve==='E32').map(x=>x.competence)).size;
-    const e33done=new Set(v.filter(x=>x.epreuve==='E33').map(x=>x.competence)).size;
-    const e2pct=Math.round(e2done/COMP_E31.length*100);
-    const e3pct=Math.round(e3done/COMP_E32.length*100);
-    const e33pct=Math.round(e33done/COMP_E33.length*100);
-    const nE2=notes[s.code]?.E31||{},nE3=notes[s.code]?.E32||{},nE33=notes[s.code]?.E33||{};
-    const clos=nE2.cloture&&nE3.cloture&&nE33.cloture;
+    // Barres de progression dynamiques selon filière
+    let barsHtml='';
+    let allClos=true;
+    let anyDone=false;
+    const epBadges=[];
+    epreuves.forEach(ep=>{
+      const comps=fil.comps?.[ep]||[];
+      const done=new Set(v.filter(x=>x.epreuve===ep).map(x=>x.competence)).size;
+      const pct=comps.length?Math.round(done/comps.length*100):0;
+      if(done>0)anyDone=true;
+      const nEp=notes[s.code]?.[ep]||{};
+      if(!nEp.cloture)allClos=false;
+      if(nEp.cloture)epBadges.push(`<span class="badge b-vert" style="font-size:.6rem">${ep}✓</span>`);
+      barsHtml+=`<div class="sc-bar-row"><span style="color:${filColor};font-weight:700;font-size:.7rem">${ep}</span><div class="sc-track"><div class="sc-fill" style="width:${pct}%;background:${filColor}"></div></div><span style="font-size:.68rem">${done}/${comps.length}</span></div>`;
+    });
+    if(!epreuves.length){
+      // TNE : modules CT
+      const comps=fil.comps?.modules||[];
+      const done=new Set(v.filter(x=>x.epreuve==='modules').map(x=>x.competence)).size;
+      const pct=comps.length?Math.round(done/comps.length*100):0;
+      if(done>0)anyDone=true;
+      barsHtml+=`<div class="sc-bar-row"><span style="color:${filColor};font-weight:700;font-size:.7rem">CT</span><div class="sc-track"><div class="sc-fill" style="width:${pct}%;background:${filColor}"></div></div><span style="font-size:.68rem">${done}/${comps.length}</span></div>`;
+      allClos=false;
+    }
+    const clos=epreuves.length&&allClos;
     const alerte=s.alerte&&!clos;
-    // Alerte journal
     const daysSinceJournal=calcDaysSinceLastEntry?.(s.code);
     const journalAlert=daysSinceJournal!==null&&daysSinceJournal>=5;
-    if(journalAlert)journalAlerts++;
     if(alerte||journalAlert)al++;if(clos)cl++;if(s.statut==='actif')ac++;
-    const cls=clos?'complet':alerte||journalAlert?'alerte':e2done>0?'en-cours':'';
+    const cardCls=clos?'complet':alerte||journalAlert?'alerte':anyDone?'en-cours':'';
     const jColor=getAlertColor?.(daysSinceJournal)||{ico:'❓'};
     // Suivi stage compact
     const trk=stageTracking(s.code);
@@ -1739,27 +1789,21 @@ function renderDash(){
     }).join('');
     const pI=trk.lastPhoto===null?'🔴':trk.lastPhoto>=4?'🔴':trk.lastPhoto>=2?'🟡':'🟢';
     const cI=trk.lastComment===null?'🔴':trk.lastComment>=4?'🔴':trk.lastComment>=2?'🟡':'🟢';
-    // Nombre d'activités de l'élève
     const nbActs=(window.appCfg?.activites||[]).filter(a=>a.eleves&&a.eleves.indexOf(s.code)!==-1).length;
-    return `<div class="sc ${cls}">
+    return `<div class="sc ${cardCls}">
       <div class="sc-top" style="cursor:pointer" onclick="goEval('${s.code}')">
         <div><div class="sc-nom">${esc(s.nom)} ${esc(s.prenom)}</div><div class="sc-cls">${esc(s.classe)||'—'}</div></div>
         <div style="text-align:right">
           <span class="sc-code">${s.code}</span>
           <div style="display:flex;gap:.2rem;flex-wrap:wrap;justify-content:flex-end;margin-top:.2rem">
-            ${nE2.cloture?'<span class="badge b-vert" style="font-size:.6rem">E31✓</span>':''}
-            ${nE3.cloture?'<span class="badge b-vert" style="font-size:.6rem">E32✓</span>':''}
-            ${nE33.cloture?'<span class="badge b-vert" style="font-size:.6rem">E33✓</span>':''}
+            ${epBadges.join('')}
             ${alerte?'<span class="badge b-rouge" style="font-size:.6rem">⚠️</span>':''}
             <span title="Journal PFMP" style="font-size:.7rem">${jColor.ico}</span>
           </div>
         </div>
       </div>
-      <div onclick="goEval('${s.code}')" style="cursor:pointer">
-        <div class="sc-bar-row"><span style="color:var(--e31)">E31</span><div class="sc-track"><div class="sc-fill f-e31" style="width:${e2pct}%"></div></div><span>${e2done}/${COMP_E31.length}</span></div>
-        <div class="sc-bar-row"><span style="color:var(--e32)">E32</span><div class="sc-track"><div class="sc-fill f-e32" style="width:${e3pct}%"></div></div><span>${e3done}/${COMP_E32.length}</span></div>
-        <div class="sc-bar-row"><span style="color:var(--e33)">E33</span><div class="sc-track"><div class="sc-fill f-e33" style="width:${e33pct}%"></div></div><span>${e33done}/${COMP_E33.length}</span></div>
-      </div>
+      <div onclick="goEval('${s.code}')" style="cursor:pointer">${barsHtml}</div>
+      <div data-mini-radar="${s.code}" style="min-height:140px;margin:.3rem 0"></div>
       ${trk.bar.length?`<div style="display:flex;align-items:center;gap:4px;margin:.35rem 0 .15rem">
         <span style="font-size:.65rem;font-weight:700;color:var(--gris)">Stage</span>
         <div style="display:flex;gap:2px">${miniBar}</div>
@@ -1780,7 +1824,7 @@ function renderDash(){
       </div>
     </div>`;
   });
-  g.innerHTML=cards.join('');
+  g.innerHTML=bannerHtml+cards.join('');
   document.getElementById('statTotal').textContent=filteredStudents.length;
   document.getElementById('statAlertes').textContent=al;
   document.getElementById('statClos').textContent=cl;
@@ -1788,10 +1832,13 @@ function renderDash(){
   // Badge alerte nav
   const nb=document.querySelector('.nav-btn[data-tab="dashboard"]');
   if(nb){nb.querySelector('.nav-badge')?.remove();if(al>0)nb.insertAdjacentHTML('beforeend',`<span class="nav-badge">${al}</span>`);}
+  // Mini-radars dans chaque fiche
+  if(window.radarModule){
+    setTimeout(()=>radarModule.renderAllMiniRadars(),120);
+  }
   // Radar classe (si zone visible)
   const rz=document.getElementById('radarClassZone');
   if(rz&&rz.style.display!=='none'&&window.radarModule){
-    const dClasse=document.getElementById('dashFiltreClasse')?.value||'all';
     radarModule.renderClassRadar(rz,{classe:dClasse,annee:dAnnee,groupe:dGroupe});
   }
 }
@@ -2846,22 +2893,23 @@ function renderBilan(){
   <!-- Jury & Évaluateurs CCF -->
   <div class="card" style="border-top:3px solid var(--orange)">
     <div class="card-title" style="color:var(--orange)">👥 Jury CCF — Évaluateurs</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
-      <div class="fr"><label style="font-size:.75rem;font-weight:800;color:var(--bleu)">👨‍🏫 Évaluateur enseignant</label>
-        <select id="juryEnseignant" onchange="saveJury()" style="padding:.5rem;border:2px solid var(--gris3);border-radius:var(--r2);font-size:.82rem;width:100%">
-          <option value="">— Choisir —</option>
-          <option value="${cfg.nomProf||''}">${cfg.nomProf||'Moi'}</option>
-          ${users.filter(u=>{const r=u.role||'les-deux';return (r==='enseignant'||r==='les-deux')&&u.actif!==false;}).map(u=>`<option value="${u.nom}">${u.nom}</option>`).join('')}
-        </select>
-      </div>
-      <div class="fr"><label style="font-size:.75rem;font-weight:800;color:var(--teal)">🏢 Évaluateur professionnel (tuteur)</label>
-        <select id="juryPro" onchange="saveJury()" style="padding:.5rem;border:2px solid var(--gris3);border-radius:var(--r2);font-size:.82rem;width:100%">
-          <option value="">— Choisir —</option>
-          ${(()=>{const st=students.find(x=>x.code===cur);return st?.tuteur_nom?`<option value="${st.tuteur_nom}">${st.tuteur_nom} (tuteur stage)</option>`:'';})()}
-          ${users.filter(u=>{const r=u.role||'les-deux';return (r==='evaluateur'||r==='les-deux')&&u.actif!==false;}).map(u=>`<option value="${u.nom}">${u.nom}</option>`).join('')}
-        </select>
-      </div>
-    </div>
+    ${(()=>{
+      const st=students.find(x=>x.code===cur);
+      const fk=st?getFiliere(st):'BAC_MFER';
+      const fil=FILIERES[fk];
+      const eps=fil?.epreuves||[];
+      if(fk==='TNE') return '<div style="color:var(--gris);font-size:.8rem;padding:.5rem">Pas d\'épreuves CCF pour la 2nde TNE.</div>';
+      let h='';
+      eps.forEach(ep=>{
+        const badges=window.juryModule?juryModule.renderBadges(cur,ep):'';
+        h+=`<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;background:var(--gris2);border-radius:var(--r2);margin-bottom:.4rem;flex-wrap:wrap">
+          <span style="font-weight:800;color:${fil?.couleur||'var(--bleu)'};font-size:.8rem;min-width:35px">${ep}</span>
+          <div style="flex:1;display:flex;flex-wrap:wrap;gap:.3rem" id="juryBadges_${ep}">${badges}</div>
+          <button class="btn btn-ghost btn-xs" onclick="juryModule.showPicker('${cur}','${ep}',function(){renderBilan()})" style="white-space:nowrap">👥 Désigner</button>
+        </div>`;
+      });
+      return h;
+    })()}
     <div style="font-size:.72rem;color:var(--gris);margin-bottom:.5rem">Note = somme des compétences validées manuellement. Les PFMP sont évaluées séparément (ne comptent pas pour l'examen).</div>
     <div style="background:var(--gris2);border-radius:var(--r2);padding:.6rem .75rem;font-size:.82rem;margin-bottom:.5rem">
       <div style="display:flex;justify-content:space-around;align-items:center;flex-wrap:wrap;gap:.4rem">
@@ -2887,12 +2935,7 @@ function renderBilan(){
       </div>
     </div>
   </div>`;
-  // Pré-remplir les sélecteurs jury
-  const jury=notes[cur]?.jury||{};
-  const selE=document.getElementById('juryEnseignant');
-  const selP=document.getElementById('juryPro');
-  if(selE&&jury.enseignant){selE.value=jury.enseignant;}
-  if(selP&&jury.professionnel){selP.value=jury.professionnel;}
+  // Les badges jury sont rendus inline dans le HTML ci-dessus
   // Radars compétences
   if(window.radarModule){
     radarModule.renderStudentRadar(cur,document.getElementById('radarBilanEleve'));
@@ -2939,12 +2982,8 @@ function bilanTable(det,ep,code,isCloture){
   return `<table class="bilan-table"><thead><tr><th>Code</th><th>Compétence</th><th style="text-align:center">🏢 Tuteur</th><th style="text-align:center">👨‍🏫 Prof</th><th style="text-align:center">✅</th><th style="text-align:center">Pts</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 function saveJury(){
+  // Rétro-compatibilité — les évaluateurs sont maintenant gérés par juryModule par épreuve
   if(!cur)return;
-  if(!notes[cur])notes[cur]={E31:{},E32:{},E33:{}};
-  notes[cur].jury={
-    enseignant:document.getElementById('juryEnseignant')?.value||'',
-    professionnel:document.getElementById('juryPro')?.value||''
-  };
   saveLocal();
   toast('Jury enregistré','ok');
 }
@@ -3010,11 +3049,14 @@ function renderEleves(){
     </div>
     <div class="el-act">
       <button class="btn btn-ghost btn-xs" onclick="toggleGroupe('${s.code}')" title="Groupe">👥</button>
+      ${s.tel_eleve?`<a class="btn btn-ghost btn-xs" href="https://wa.me/${formatWA(s.tel_eleve)}" target="_blank" title="WhatsApp élève (${esc(s.tel_eleve)})">💬E</a>`:''}
+      ${s.tel_tuteur||s.tuteur_tel?`<a class="btn btn-ghost btn-xs" href="https://wa.me/${formatWA(s.tel_tuteur||s.tuteur_tel)}" target="_blank" title="WhatsApp tuteur (${esc(s.tel_tuteur||s.tuteur_tel)})">💬T</a>`:''}
       <button class="btn btn-ghost btn-xs" onclick="previewPageEleve('${s.code}')" title="Voir page élève">👁️E</button>
       <button class="btn btn-ghost btn-xs" onclick="previewPageTuteur('${s.code}')" title="Voir page tuteur">👁️T</button>
       <button class="btn btn-ghost btn-xs" onclick="viewStagePhotos('${s.code}')" title="Photos stage">📷</button>
       <button class="btn btn-ghost btn-xs" onclick="if(window.activModule)activModule.showStudentHistory('${s.code}')" title="Historique">📋</button>
       <button class="btn btn-ghost btn-xs" onclick="showQR('${s.code}')">📱</button>
+      <button class="btn btn-ghost btn-xs" onclick="editStudent('${s.code}')" title="Modifier">✏️</button>
       <button class="btn btn-rouge btn-xs" onclick="confirmDel('${s.code}')">🗑️</button>
     </div>
   </div>`;
@@ -3032,7 +3074,14 @@ function showAddEleve(){
       <div class="fr"><label>Année</label><select id="aAnnee"><option value="1">1ère année</option><option value="2">2ème année</option></select></div>
       <div class="fr"><label>PFMP 1 (sem.)</label><input type="number" id="aPfmp1" value="3" min="1" max="8"></div>
     </div>
-    <div class="fr" style="margin-top:.5rem"><label>PFMP 2 (semaines)</label><input type="number" id="aPfmp2" value="3" min="1" max="8"></div>`,
+    <div class="fr" style="margin-top:.5rem"><label>PFMP 2 (semaines)</label><input type="number" id="aPfmp2" value="3" min="1" max="8"></div>
+    <div style="border-top:1px solid var(--gris3);padding-top:.5rem;margin-top:.5rem">
+      <div style="font-size:.78rem;font-weight:700;color:var(--teal);margin-bottom:.3rem">📞 Contacts (optionnel)</div>
+      <div class="grid2">
+        <div class="fr"><label>Tél. élève</label><input id="aTelEleve" type="tel" placeholder="06 12 34 56 78"></div>
+        <div class="fr"><label>Tél. tuteur</label><input id="aTelTuteur" type="tel" placeholder="06 98 76 54 32"></div>
+      </div>
+    </div>`,
     `<button class="btn btn-primary" onclick="doAddEleve()">✅ Ajouter</button><button class="btn btn-ghost" onclick="closeModal()">Annuler</button>`);
 }
 async function doAddEleve(){
@@ -3041,14 +3090,16 @@ async function doAddEleve(){
   const classe=document.getElementById('aClasse').value;
   const groupe=document.getElementById('aGroupe')?.value||'';
   const annee=parseInt(document.getElementById('aAnnee')?.value)||1;
+  const tel_eleve=document.getElementById('aTelEleve')?.value?.trim()||'';
+  const tel_tuteur=document.getElementById('aTelTuteur')?.value?.trim()||'';
   if(!nom){toast('Nom obligatoire','err');return;}
   closeModal();showSpinner();
   try{
-    const r=await apiCall({action:'addEleve',data:{nom,prenom,classe,groupe,annee,referentiel:getFiliere({classe}),pfmp1_sem:parseInt(document.getElementById('aPfmp1')?.value)||3,pfmp2_sem:parseInt(document.getElementById('aPfmp2')?.value)||3}});
+    const r=await apiCall({action:'addEleve',data:{nom,prenom,classe,groupe,annee,referentiel:getFiliere({classe}),pfmp1_sem:parseInt(document.getElementById('aPfmp1')?.value)||3,pfmp2_sem:parseInt(document.getElementById('aPfmp2')?.value)||3,tel_eleve,tel_tuteur}});
     await syncAll();toast(`${nom} ajouté · ${r.code}`,'ok');
   }catch{
     const code='ELV-'+String(students.length+1).padStart(3,'0');
-    students.push({code,nom,prenom,classe,groupe,annee,statut:'actif',referentiel:getFiliere({classe}),token_eleve:Math.random().toString(36).substring(2,10).toUpperCase(),token_tuteur:Math.random().toString(36).substring(2,10).toUpperCase()});
+    students.push({code,nom,prenom,classe,groupe,annee,statut:'actif',referentiel:getFiliere({classe}),token_eleve:Math.random().toString(36).substring(2,10).toUpperCase(),token_tuteur:Math.random().toString(36).substring(2,10).toUpperCase(),tel_eleve,tel_tuteur});
     window.students=students;
     saveLocal();updateAll();toast(`${nom} ajouté localement (sync en attente)`,'warn');
   }finally{hideSpinner();}
@@ -3675,25 +3726,56 @@ function toggleDemoMode(){
 }
 function loadDemoData(){
   students=[
-    {code:'ELV-001',nom:'DUPONT',prenom:'Martin',classe:'CAP IFCA 1',statut:'actif',referentiel:'CAP_IFCA',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'Climafroid SARL',tuteur_nom:'Jean Martin',alerte:null,derniere_eval:new Date(Date.now()-86400000*3).toISOString()},
-    {code:'ELV-002',nom:'MARTIN',prenom:'Léa',classe:'CAP IFCA 2',statut:'actif',referentiel:'CAP_IFCA',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'FrigoTech',tuteur_nom:'Sophie Bernard',alerte:'5 jours sans évaluation',derniere_eval:new Date(Date.now()-86400000*5).toISOString()},
-    {code:'ELV-003',nom:'GARCIA',prenom:'Tom',classe:'1ère MFER',statut:'actif',referentiel:'BAC_MFER',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'AC Solutions',tuteur_nom:'Paul Roux',alerte:null,derniere_eval:new Date(Date.now()-86400000*1).toISOString()},
-    {code:'ELV-004',nom:'BERNARD',prenom:'Emma',classe:'Term MFER',statut:'actif',referentiel:'BAC_MFER',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'Thermique Plus',tuteur_nom:'Lucie Moreau',alerte:null,derniere_eval:new Date(Date.now()-86400000*2).toISOString()},
-    {code:'ELV-005',nom:'PETIT',prenom:'Lucas',classe:'2nde TNE',statut:'actif',referentiel:'TNE',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'Énergie Verte',tuteur_nom:'Marie Blanc',alerte:'22 jours sans évaluation',derniere_eval:new Date(Date.now()-86400000*22).toISOString()},
-    {code:'ELV-006',nom:'ROUX',prenom:'Camille',classe:'CAP IFCA 1',statut:'actif',referentiel:'CAP_IFCA',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'Froid Express',tuteur_nom:'Pierre Dubois',alerte:null,derniere_eval:new Date(Date.now()-86400000*1).toISOString()},
+    {code:'ELV-001',nom:'DUPONT',prenom:'Martin',classe:'CAP IFCA 1',statut:'actif',referentiel:'CAP_IFCA',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'Climafroid SARL',tuteur_nom:'Jean Martin',tel_eleve:'06 12 34 56 78',tel_tuteur:'06 98 76 54 32',alerte:null,derniere_eval:new Date(Date.now()-86400000*3).toISOString()},
+    {code:'ELV-002',nom:'MARTIN',prenom:'Léa',classe:'CAP IFCA 2',statut:'actif',referentiel:'CAP_IFCA',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'FrigoTech',tuteur_nom:'Sophie Bernard',tel_eleve:'06 11 22 33 44',tel_tuteur:'06 55 66 77 88',alerte:'5 jours sans évaluation',derniere_eval:new Date(Date.now()-86400000*5).toISOString()},
+    {code:'ELV-003',nom:'GARCIA',prenom:'Tom',classe:'1ère MFER',statut:'actif',referentiel:'BAC_MFER',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'AC Solutions',tuteur_nom:'Paul Roux',tel_eleve:'07 01 02 03 04',tel_tuteur:'06 44 55 66 77',alerte:null,derniere_eval:new Date(Date.now()-86400000*1).toISOString()},
+    {code:'ELV-004',nom:'BERNARD',prenom:'Emma',classe:'Term MFER',statut:'actif',referentiel:'BAC_MFER',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'Thermique Plus',tuteur_nom:'Lucie Moreau',tel_eleve:'06 22 33 44 55',tel_tuteur:'06 77 88 99 00',alerte:null,derniere_eval:new Date(Date.now()-86400000*2).toISOString()},
+    {code:'ELV-005',nom:'PETIT',prenom:'Lucas',classe:'2nde TNE',statut:'actif',referentiel:'TNE',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'Énergie Verte',tuteur_nom:'Marie Blanc',tel_eleve:'07 10 20 30 40',tel_tuteur:'06 88 77 66 55',alerte:'22 jours sans évaluation',derniere_eval:new Date(Date.now()-86400000*22).toISOString()},
+    {code:'ELV-006',nom:'ROUX',prenom:'Camille',classe:'CAP IFCA 1',statut:'actif',referentiel:'CAP_IFCA',token_eleve:'[DEMO]',token_tuteur:'[DEMO]',entreprise_nom:'Froid Express',tuteur_nom:'Pierre Dubois',tel_eleve:'06 33 44 55 66',tel_tuteur:'06 99 88 77 66',alerte:null,derniere_eval:new Date(Date.now()-86400000*1).toISOString()},
   ];
+  // CAP IFCA : ELV-001 (CAP IFCA 1) — épreuves EP2/EP3
   validations['ELV-001']=[
-    {epreuve:'E31',competence:'C3.1',critere:'',niveau:'PM',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*3).toISOString(),phase:'formatif',contexte:'atelier'},
-    {epreuve:'E31',competence:'C3.4',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*3).toISOString(),phase:'formatif',contexte:'atelier'},
-    {epreuve:'E31',competence:'C3.9',critere:'',niveau:'EC',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*2).toISOString(),phase:'formatif',contexte:'pfmp1'},
-    {epreuve:'E32',competence:'C4.5',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'A'},
-    {epreuve:'E32',competence:'C4.1',critere:'',niveau:'PM',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'A'},
+    {epreuve:'EP2',competence:'C3.1',critere:'',niveau:'PM',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*3).toISOString(),phase:'formatif',contexte:'atelier'},
+    {epreuve:'EP2',competence:'C3.4',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*3).toISOString(),phase:'formatif',contexte:'atelier'},
+    {epreuve:'EP2',competence:'C3.2',critere:'',niveau:'EC',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*2).toISOString(),phase:'formatif',contexte:'pfmp1'},
+    {epreuve:'EP2',competence:'C3.3',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*2).toISOString(),phase:'formatif',contexte:'atelier'},
+    {epreuve:'EP3',competence:'C4.1',critere:'',niveau:'PM',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'A'},
+    {epreuve:'EP3',competence:'C4.5',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'A'},
+    {epreuve:'EP3',competence:'C4.3',critere:'',niveau:'EC',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'A'},
   ];
+  // CAP IFCA : ELV-002 (CAP IFCA 2)
+  validations['ELV-002']=[
+    {epreuve:'EP2',competence:'C3.1',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*5).toISOString(),phase:'formatif',contexte:'pfmp1'},
+    {epreuve:'EP2',competence:'C3.4',critere:'',niveau:'EC',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*5).toISOString(),phase:'formatif',contexte:'pfmp1'},
+    {epreuve:'EP3',competence:'C4.2',critere:'',niveau:'NA',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*5).toISOString(),phase:'formatif',contexte:'A'},
+  ];
+  // Bac Pro MFER : ELV-003 (1ère MFER) — épreuves E31/E32/E33
   validations['ELV-003']=[
     {epreuve:'E31',competence:'C3.4',critere:'',niveau:'PM',evaluateur:'F. Henninot',timestamp:new Date().toISOString(),phase:'formatif',contexte:'pfmp1'},
     {epreuve:'E31',competence:'C3.6',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date().toISOString(),phase:'formatif',contexte:'pfmp1'},
+    {epreuve:'E31',competence:'C3.1',critere:'',niveau:'EC',evaluateur:'F. Henninot',timestamp:new Date().toISOString(),phase:'formatif',contexte:'atelier'},
+    {epreuve:'E32',competence:'C4.1',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date().toISOString(),phase:'formatif',contexte:'A'},
+    {epreuve:'E32',competence:'C4.5',critere:'',niveau:'EC',evaluateur:'F. Henninot',timestamp:new Date().toISOString(),phase:'formatif',contexte:'A'},
   ];
-  notes['ELV-001']={E31:{note_finale:null,cloture:false},E32:{note_finale:null,cloture:false},E33:{note_finale:null,cloture:false}};
+  // Bac Pro MFER : ELV-004 (Term MFER)
+  validations['ELV-004']=[
+    {epreuve:'E31',competence:'C3.1',critere:'',niveau:'PM',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*2).toISOString(),phase:'formatif',contexte:'atelier'},
+    {epreuve:'E31',competence:'C3.4',critere:'',niveau:'PM',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*2).toISOString(),phase:'formatif',contexte:'pfmp1'},
+    {epreuve:'E31',competence:'C3.6',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*2).toISOString(),phase:'formatif',contexte:'pfmp1'},
+    {epreuve:'E32',competence:'C4.1',critere:'',niveau:'PM',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'A'},
+    {epreuve:'E32',competence:'C4.5',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'A'},
+    {epreuve:'E32',competence:'C4.3',critere:'',niveau:'EC',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'A'},
+    {epreuve:'E33',competence:'C1.2',critere:'',niveau:'M',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'D'},
+  ];
+  // CAP IFCA : ELV-006 (CAP IFCA 1)
+  validations['ELV-006']=[
+    {epreuve:'EP2',competence:'C3.1',critere:'',niveau:'EC',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'atelier'},
+    {epreuve:'EP2',competence:'C3.4',critere:'',niveau:'NA',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'atelier'},
+    {epreuve:'EP3',competence:'C4.5',critere:'',niveau:'EC',evaluateur:'F. Henninot',timestamp:new Date(Date.now()-86400000*1).toISOString(),phase:'formatif',contexte:'A'},
+  ];
+  notes['ELV-001']={EP2:{note_finale:null,cloture:false},EP3:{note_finale:null,cloture:false}};
+  notes['ELV-003']={E31:{note_finale:null,cloture:false},E32:{note_finale:null,cloture:false},E33:{note_finale:null,cloture:false}};
+  notes['ELV-004']={E31:{note_finale:null,cloture:false},E32:{note_finale:null,cloture:false},E33:{note_finale:null,cloture:false}};
   // Photos fictives SVG pour la démo
   const _dp=function(txt,bg,ico){return 'data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="'+bg+'"/><text x="200" y="130" text-anchor="middle" font-size="64">'+ico+'</text><text x="200" y="190" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#fff">'+txt+'</text><text x="200" y="215" text-anchor="middle" font-family="sans-serif" font-size="11" fill="rgba(255,255,255,0.7)">Photo stage - demo</text></svg>');};
   const now=Date.now();
@@ -3709,6 +3791,20 @@ function loadDemoData(){
   pfmpData['ELV-006']={journal:[
     {id:'pj5',date:new Date(now-86400000*1).toISOString(),type:'activite',text:'Premier jour : decouverte de l atelier.',photos:[_dp('Atelier','#3498db','\\ud83c\\udfed')],synced:true},
   ]};
+  // Pool d'évaluateurs démo
+  appCfg.evaluateurs=[
+    {id:'EV-d1',nom:'F. Henninot',qualite:'PLP Génie Climatique',type:'Enseignant',etablissement:'Lycée des Métiers',actif:true},
+    {id:'EV-d2',nom:'J. Martin',qualite:'PLP Électrotechnique',type:'Enseignant',etablissement:'Lycée des Métiers',actif:true},
+    {id:'EV-d3',nom:'P. Dubois',qualite:'Chef d\'atelier',type:'Professionnel',etablissement:'Froid Express',actif:true},
+    {id:'EV-d4',nom:'S. Bernard',qualite:'Responsable technique',type:'Professionnel',etablissement:'FrigoTech',actif:true},
+  ];
+  // Commission démo
+  appCfg.commissions=[
+    {id:'COM-d1',nom:'Commission EP3 CAP',epreuve:'EP3',evaluateurs:['F. Henninot','P. Dubois'],eleves:['ELV-001','ELV-006'],date:new Date().toISOString().slice(0,10)}
+  ];
+  // Affecter les évaluateurs de la commission
+  notes['ELV-001'].EP3=notes['ELV-001'].EP3||{};notes['ELV-001'].EP3.evaluateurs=['F. Henninot','P. Dubois'];
+  notes['ELV-006']={EP2:{},EP3:{evaluateurs:['F. Henninot','P. Dubois']}};
   window.students=students;window.validations=validations;
   cur='ELV-001';updateAll();
 }
@@ -3726,6 +3822,47 @@ function toast(msg,type='inf'){
   setTimeout(()=>{t.style.cssText='opacity:0;transition:opacity .3s';setTimeout(()=>t.remove(),300);},3000);
 }
 function dateFR(iso){if(!iso)return'—';try{return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return String(iso).slice(0,10);}}
+/** Formate un numéro FR pour WhatsApp (06 → 336) */
+function formatWA(tel){
+  if(!tel)return'';
+  let n=tel.replace(/[\s.\-()]/g,'');
+  if(n.startsWith('0'))n='33'+n.slice(1);
+  if(!n.startsWith('+')&&!n.startsWith('33'))n='33'+n;
+  return n.replace('+','');
+}
+/** Modifier les infos d'un élève (téléphones, entreprise, tuteur) */
+function editStudent(code){
+  const s=students.find(x=>x.code===code);
+  if(!s)return;
+  showModal(`✏️ Modifier — ${s.nom} ${s.prenom}`,`
+    <div class="grid2"><div class="fr"><label>Nom</label><input id="edNom" value="${esc(s.nom)}"></div><div class="fr"><label>Prénom</label><input id="edPrenom" value="${esc(s.prenom||'')}"></div></div>
+    <div class="grid2" style="margin-top:.5rem"><div class="fr"><label>Classe</label><select id="edClasse">${['CAP IFCA 1','CAP IFCA 2','2nde TNE','1ère MFER','Term MFER'].map(c=>`<option${c===s.classe?' selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="fr"><label>Groupe</label><select id="edGroupe"><option value="">—</option><option value="G1"${s.groupe==='G1'?' selected':''}>G1</option><option value="G2"${s.groupe==='G2'?' selected':''}>G2</option></select></div></div>
+    <div style="border-top:1px solid var(--gris3);padding-top:.5rem;margin-top:.5rem">
+      <div style="font-size:.78rem;font-weight:700;color:var(--teal);margin-bottom:.3rem">📞 Contacts</div>
+      <div class="grid2"><div class="fr"><label>Tél. élève</label><input id="edTelEleve" type="tel" value="${esc(s.tel_eleve||'')}" placeholder="06 12 34 56 78"></div>
+      <div class="fr"><label>Tél. tuteur</label><input id="edTelTuteur" type="tel" value="${esc(s.tel_tuteur||s.tuteur_tel||'')}" placeholder="06 98 76 54 32"></div></div>
+    </div>
+    <div style="border-top:1px solid var(--gris3);padding-top:.5rem;margin-top:.5rem">
+      <div style="font-size:.78rem;font-weight:700;color:var(--orange);margin-bottom:.3rem">🏢 Stage</div>
+      <div class="grid2"><div class="fr"><label>Entreprise</label><input id="edEntreprise" value="${esc(s.entreprise_nom||'')}"></div>
+      <div class="fr"><label>Tuteur</label><input id="edTuteurNom" value="${esc(s.tuteur_nom||'')}"></div></div>
+    </div>`,
+  `<button class="btn btn-primary" onclick="doEditStudent('${code}')">💾 Enregistrer</button><button class="btn btn-ghost" onclick="closeModal()">Annuler</button>`);
+}
+function doEditStudent(code){
+  const s=students.find(x=>x.code===code);if(!s)return;
+  s.nom=document.getElementById('edNom')?.value?.trim()?.toUpperCase()||s.nom;
+  s.prenom=document.getElementById('edPrenom')?.value?.trim()||s.prenom;
+  s.classe=document.getElementById('edClasse')?.value||s.classe;
+  s.groupe=document.getElementById('edGroupe')?.value||'';
+  s.tel_eleve=document.getElementById('edTelEleve')?.value?.trim()||'';
+  s.tel_tuteur=document.getElementById('edTelTuteur')?.value?.trim()||'';
+  s.entreprise_nom=document.getElementById('edEntreprise')?.value?.trim()||'';
+  s.tuteur_nom=document.getElementById('edTuteurNom')?.value?.trim()||'';
+  s.referentiel=getFiliere(s);
+  window.students=students;saveLocal();closeModal();updateAll();toast(`${s.nom} mis à jour`,'ok');
+}
 function updateStor(){
   const used=new Blob([localStorage.getItem(SK)||'']).size;
   const el=document.getElementById('storTxt');if(el)el.textContent=`${(used/1024/1024).toFixed(1)} MB / 5 MB`;
