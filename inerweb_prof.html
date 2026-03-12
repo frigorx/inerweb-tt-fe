@@ -470,6 +470,10 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
         </select>
       </div>
       <div id="dashGrid" class="student-grid"><div class="empty" style="grid-column:1/-1"><div class="ei">⏳</div><p>Chargement...</p></div></div>
+      <div class="card" style="margin-top:.75rem">
+        <div class="card-title" style="cursor:pointer" onclick="var z=document.getElementById('radarClassZone');z.style.display=z.style.display==='none'?'block':'none';this.querySelector('.ra').textContent=z.style.display==='none'?'▶':'▼';if(z.style.display!=='none'&&window.radarModule){var dc=document.getElementById('dashFiltreClasse'),da=document.getElementById('dashFiltreAnnee'),dg=document.getElementById('dashFiltreGroupe');radarModule.renderClassRadar(z,{classe:dc?.value||'all',annee:da?.value||'all',groupe:dg?.value||'all'});}">🕸️ Radar classe <span class="ra" style="font-size:.7rem;color:var(--gris)">▶</span></div>
+        <div id="radarClassZone" style="display:none;text-align:center;overflow-x:auto"></div>
+      </div>
     </div></div>
 
     <!-- ÉLÈVES -->
@@ -1784,6 +1788,12 @@ function renderDash(){
   // Badge alerte nav
   const nb=document.querySelector('.nav-btn[data-tab="dashboard"]');
   if(nb){nb.querySelector('.nav-badge')?.remove();if(al>0)nb.insertAdjacentHTML('beforeend',`<span class="nav-badge">${al}</span>`);}
+  // Radar classe (si zone visible)
+  const rz=document.getElementById('radarClassZone');
+  if(rz&&rz.style.display!=='none'&&window.radarModule){
+    const dClasse=document.getElementById('dashFiltreClasse')?.value||'all';
+    radarModule.renderClassRadar(rz,{classe:dClasse,annee:dAnnee,groupe:dGroupe});
+  }
 }
 function goEval(code){selectStudent(code,'e31');switchTab('activites');switchActPanel('e31');}
 
@@ -2763,6 +2773,15 @@ function renderBilan(){
       <button class="btn btn-orange btn-sm" onclick="exportStudentPDF()">📄 PDF</button>
     </div>
   </div>
+  <!-- Radar compétences -->
+  <div class="card">
+    <div class="card-title">🕸️ Profil compétences</div>
+    <div id="radarBilanEleve"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📊 Élève vs Classe</div>
+    <div id="radarBilanCompare"></div>
+  </div>
   <!-- Jury & Évaluateurs CCF -->
   <div class="card" style="border-top:3px solid var(--orange)">
     <div class="card-title" style="color:var(--orange)">👥 Jury CCF — Évaluateurs</div>
@@ -2813,6 +2832,11 @@ function renderBilan(){
   const selP=document.getElementById('juryPro');
   if(selE&&jury.enseignant){selE.value=jury.enseignant;}
   if(selP&&jury.professionnel){selP.value=jury.professionnel;}
+  // Radars compétences
+  if(window.radarModule){
+    radarModule.renderStudentRadar(cur,document.getElementById('radarBilanEleve'));
+    radarModule.renderCompareRadar(cur,document.getElementById('radarBilanCompare'));
+  }
   // Modules Fusion — rendu contextuel pour l'élève sélectionné
   if(window.expoModule){
     const bar=document.getElementById('expositionBar');if(bar)bar.innerHTML=expoModule.renderBar(cur);
