@@ -1,948 +1,637 @@
 /**
  * demo-guide.js — Module de guide interactif pour inerWeb TT
  *
- * Affiche un panneau latéral droit avec du contenu contextuel
- * selon la page et l'onglet actif. Inclut une visite guidée.
+ * En mode démo (?demo=1) :
+ *   - Panneau s'ouvre automatiquement avec un écran d'accueil
+ *   - Propose de lancer la visite guidée immédiatement
+ *   - Contenu contextuel qui change selon l'onglet actif
  *
- * COMPORTEMENT :
- * - Actif par défaut sur toutes les pages pour tous les rôles
- * - L'admin peut désactiver/masquer le guide via la config
- * - Permissions par rôle : prof (tout), tuteur (tuteur), élève (élève), admin (tout)
- * - Config stockée dans localStorage('inerweb-tt-fe-guide-cfg')
+ * En mode normal :
+ *   - Bouton flottant discret, panneau fermé par défaut
+ *   - L'admin peut configurer la visibilité
  *
- * Module autonome — s'initialise au chargement, injecte son propre CSS.
+ * Module autonome IIFE — injecte son propre CSS.
  */
 (function () {
   'use strict';
 
-  // ═══════════════════════════════════════════════════════════
-  // 1. CONFIGURATION & PERMISSIONS
-  // ═══════════════════════════════════════════════════════════
-  const GUIDE_STORAGE_KEY = 'inerweb-tt-fe-guide-cfg';
+  // ═══════════════════════════════════════════════
+  // 1. CONFIG & PERMISSIONS
+  // ═══════════════════════════════════════════════
+  const GUIDE_KEY = 'inerweb-tt-fe-guide-cfg';
+  const STATE_KEY = 'inerweb-tt-fe-guide-state';
 
-  /**
-   * Configuration par défaut — tout le monde voit tout.
-   * L'admin peut modifier via l'interface d'admin.
-   *
-   * Structure :
-   *   enabled     : booléen global (le guide est-il actif ?)
-   *   roles       : quelles pages chaque rôle peut voir
-   *                  'all' = tout, sinon liste de pages ['prof','tuteur','eleve','admin']
-   *   forceDemo   : n'activer QUE en mode démo (?demo=1)
-   */
   const DEFAULT_CONFIG = {
     enabled: true,
     forceDemo: false,
-    roles: {
-      prof: ['all'],
-      tuteur: ['tuteur'],
-      eleve: ['eleve'],
-      admin: ['all']
+    roles: { prof: ['all'], tuteur: ['tuteur'], eleve: ['eleve'], admin: ['all'] }
+  };
+
+  function loadCfg() {
+    try { const r = localStorage.getItem(GUIDE_KEY); if (r) return Object.assign({}, DEFAULT_CONFIG, JSON.parse(r)); } catch (e) {}
+    return Object.assign({}, DEFAULT_CONFIG);
+  }
+  function saveCfg(c) { try { localStorage.setItem(GUIDE_KEY, JSON.stringify(c)); } catch (e) {} }
+  function loadState() { try { return JSON.parse(localStorage.getItem(STATE_KEY) || '{}'); } catch (e) { return {}; } }
+  function saveState(s) { try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch (e) {} }
+
+  window.getGuideConfig = loadCfg;
+  window.setGuideConfig = function (c) { saveCfg(c); location.reload(); };
+
+  function isDemo() { return new URLSearchParams(location.search).get('demo') === '1' || window.demoMode === true; }
+
+  function getPage() {
+    const p = location.pathname.toLowerCase();
+    if (p.includes('inerweb_prof')) return 'prof';
+    if (p.includes('inerweb_eleve')) return 'eleve';
+    if (p.includes('inerweb_tuteur')) return 'tuteur';
+    if (p.includes('inerweb_admin')) return 'admin';
+    return 'unknown';
+  }
+
+  function shouldShow() {
+    const cfg = loadCfg();
+    if (!cfg.enabled) return false;
+    if (cfg.forceDemo && !isDemo()) return false;
+    const page = getPage();
+    const role = page === 'unknown' ? 'prof' : page;
+    const allowed = cfg.roles[role] || ['all'];
+    return allowed.includes('all') || allowed.includes(page);
+  }
+
+  // ═══════════════════════════════════════════════
+  // 2. CONTENU CONTEXTUEL
+  // ═══════════════════════════════════════════════
+
+  // Écran d'accueil pour le mode démo
+  const WELCOME = {
+    prof: {
+      title: '👋 Bienvenue dans la démo Professeur !',
+      body: 'Vous êtes connecté en tant que <strong>professeur</strong> avec des données fictives pré-chargées (6 élèves répartis sur 3 filières).\n\n' +
+        'Ce guide va vous accompagner pour découvrir toutes les fonctionnalités.\n\n' +
+        '<strong>Que pouvez-vous faire ici ?</strong>\n' +
+        '• Voir le tableau de bord avec tous vos élèves\n' +
+        '• Évaluer des compétences par épreuve\n' +
+        '• Suivre les stages et les PFMP\n' +
+        '• Générer des bilans et des exports PDF\n' +
+        '• Visualiser les radars de progression'
+    },
+    eleve: {
+      title: '👋 Bienvenue dans la démo Élève !',
+      body: 'Vous êtes connecté en tant que <strong>Martin DUPONT</strong> (CAP IFCA 1).\n\n' +
+        '<strong>Que pouvez-vous faire ici ?</strong>\n' +
+        '• Consulter votre progression par compétence\n' +
+        '• Voir vos évaluations et commentaires du prof\n' +
+        '• Remplir votre journal de stage quotidien\n' +
+        '• Consulter vos informations de PFMP'
+    },
+    tuteur: {
+      title: '👋 Bienvenue dans la démo Tuteur !',
+      body: 'Vous êtes connecté en tant que <strong>Jean Martin</strong>, tuteur chez Climafroid SARL.\n' +
+        'Votre stagiaire est <strong>Martin DUPONT</strong> (CAP IFCA 1).\n\n' +
+        '<strong>Que pouvez-vous faire ici ?</strong>\n' +
+        '• Évaluer les compétences du stagiaire observées en entreprise\n' +
+        '• Noter son comportement professionnel\n' +
+        '• Ajouter des observations sur chaque compétence\n' +
+        '• Verrouiller une évaluation quand elle est terminée'
+    },
+    admin: {
+      title: '👋 Bienvenue dans la démo Admin !',
+      body: 'Vous êtes connecté en tant qu\'<strong>administrateur</strong> avec des données fictives.\n\n' +
+        '<strong>Que pouvez-vous faire ici ?</strong>\n' +
+        '• Gérer les utilisateurs (enseignants, lecteurs)\n' +
+        '• Attribuer des classes par filière\n' +
+        '• Configurer les tokens d\'accès\n' +
+        '• Consulter le journal d\'activité\n' +
+        '• Gérer le guide interactif (permissions, visibilité)'
     }
   };
 
-  /** Charge la config depuis localStorage ou retourne la config par défaut */
-  function loadGuideConfig() {
-    try {
-      const raw = localStorage.getItem(GUIDE_STORAGE_KEY);
-      if (raw) {
-        const cfg = JSON.parse(raw);
-        return Object.assign({}, DEFAULT_CONFIG, cfg);
-      }
-    } catch (e) { /* ignore */ }
-    return Object.assign({}, DEFAULT_CONFIG);
-  }
-
-  /** Sauvegarde la config dans localStorage */
-  function saveGuideConfig(cfg) {
-    try {
-      localStorage.setItem(GUIDE_STORAGE_KEY, JSON.stringify(cfg));
-    } catch (e) { /* ignore */ }
-  }
-
-  /** Expose la config pour que l'admin puisse la modifier */
-  window.getGuideConfig = loadGuideConfig;
-  window.setGuideConfig = function (cfg) {
-    saveGuideConfig(cfg);
-    // Recharger pour appliquer immédiatement
-    location.reload();
-  };
-
-  /** Détecte si le mode démo est actif */
-  function isDemoMode() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('demo') === '1' || window.demoMode === true;
-  }
-
-  /** Détecte le rôle actuel à partir de la page */
-  function getCurrentRole() {
-    const page = getPageKey();
-    if (page === 'prof') return 'prof';
-    if (page === 'eleve') return 'eleve';
-    if (page === 'tuteur') return 'tuteur';
-    if (page === 'admin') return 'admin';
-    return 'prof'; // fallback
-  }
-
-  /** Vérifie si le guide doit être affiché */
-  function shouldShowGuide() {
-    const cfg = loadGuideConfig();
-
-    // Désactivé globalement par l'admin
-    if (!cfg.enabled) return false;
-
-    // Mode forceDemo : ne s'affiche qu'avec ?demo=1
-    if (cfg.forceDemo && !isDemoMode()) return false;
-
-    // Vérifier les permissions par rôle
-    const role = getCurrentRole();
-    const page = getPageKey();
-    const allowedPages = cfg.roles[role] || ['all'];
-
-    if (allowedPages.includes('all')) return true;
-    if (allowedPages.includes(page)) return true;
-
-    return false;
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // 2. CONTENU CONTEXTUEL PAR PAGE / ONGLET
-  // ═══════════════════════════════════════════════════════════
-
-  /** Contenu pour inerweb_prof.html, indexé par id d'onglet */
+  // Contenu contextuel page Prof par onglet
   const PROF_TABS = {
     dashboard: {
       title: '🏠 Tableau de bord',
-      body:
-        "C'est votre page d'accueil. Vous y voyez d'un coup d'œil :\n" +
-        '• Le nombre total d\u2019élèves\n' +
-        '• Les alertes (élèves sans évaluation récente)\n' +
-        '• Les épreuves clôturées\n' +
-        '• Les élèves actuellement en stage',
-      tips: [
-        'Utilisez le filtre « Classe » pour afficher uniquement les élèves d\u2019une filière (CAP IFCA, Bac Pro MFER ou 2nde TNE).'
-      ],
-      hints: [
-        'Cliquez sur une fiche élève pour accéder directement à ses évaluations.'
+      body: '<strong>C\'est votre page d\'accueil.</strong> Vous voyez d\'un coup d\'œil :\n' +
+        '• <strong>Nombre d\'élèves</strong> — total de votre classe\n' +
+        '• <strong>Alertes</strong> — élèves sans évaluation récente\n' +
+        '• <strong>Clôturés</strong> — épreuves terminées\n' +
+        '• <strong>En stage</strong> — élèves actuellement en PFMP',
+      actions: [
+        { icon: '🔍', text: 'Utilisez les <strong>filtres</strong> (Classe, Année, Groupe) pour afficher un sous-ensemble d\'élèves' },
+        { icon: '👆', text: '<strong>Cliquez sur une fiche élève</strong> pour accéder directement à ses évaluations' },
+        { icon: '🕸️', text: 'Dépliez <strong>« Radar classe »</strong> en bas pour voir le graphique de progression de la classe' }
       ]
     },
     eleves: {
       title: '👥 Gestion des élèves',
-      body:
-        'Ici vous pouvez :\n' +
-        '• ➕ Ajouter un élève manuellement\n' +
-        '• 📥 Importer une liste CSV/Excel\n' +
-        '• 📱 Générer les QR codes d\u2019accès\n' +
-        '• 📷 Scanner un QR code\n' +
-        '• 🔄 Synchroniser avec le serveur\n' +
-        '• 🎓 Promouvoir les élèves en fin d\u2019année',
-      tips: [
-        'Import CSV : Le fichier doit contenir les colonnes « nom » et « prenom ». Les colonnes « classe », « groupe » et « annee » sont optionnelles.',
-        'Le système détecte automatiquement la filière à partir de la classe choisie.'
+      body: 'Gérez votre liste d\'élèves.',
+      actions: [
+        { icon: '➕', text: '<strong>Ajouter</strong> — Saisir un élève manuellement (nom, prénom, classe)' },
+        { icon: '📥', text: '<strong>Import</strong> — Charger un fichier CSV ou Excel avec toute la classe' },
+        { icon: '📱', text: '<strong>QR</strong> — Générer les QR codes d\'accès pour les élèves et tuteurs' },
+        { icon: '📷', text: '<strong>Scan</strong> — Scanner un QR code avec la caméra' },
+        { icon: '🔄', text: '<strong>Sync</strong> — Synchroniser les données avec le serveur' },
+        { icon: '🎓', text: '<strong>Promotion</strong> — Passer les élèves en année supérieure' }
       ]
     },
     activites: {
       title: '📋 Activités pédagogiques',
-      body:
-        'Créez des TP et activités pour évaluer les compétences.\n' +
-        '• Chaque activité est liée à une ou plusieurs compétences\n' +
-        '• Vous pouvez évaluer pendant un TP directement\n' +
-        '• Les activités sont classées par date',
-      tips: [
-        "C'est le point d'entrée principal pour évaluer les élèves."
+      body: '<strong>C\'est ici que vous évaluez vos élèves.</strong>',
+      actions: [
+        { icon: '📝', text: 'Créez un <strong>TP ou une activité</strong> liée à des compétences' },
+        { icon: '✅', text: 'Évaluez chaque élève sur les compétences pendant le TP' },
+        { icon: '📊', text: 'Les évaluations alimentent automatiquement les bilans et les radars' }
       ]
     },
-    progression: {
-      title: '📅 Progression',
-      body:
-        'Suivez la progression temporelle de vos élèves :\n' +
-        '• Chronologie des évaluations mois par mois\n' +
-        '• Vue d\u2019ensemble par compétence\n' +
-        '• Filtrage par élève',
-      tips: [
-        'Utile pour préparer les conseils de classe et identifier les élèves en retard.'
+    e31: {
+      title: '🔧 E31 — Réalisation & Mise en service',
+      body: 'Épreuve de réalisation. Évaluez les compétences techniques :',
+      actions: [
+        { icon: '📍', text: 'Choisissez le <strong>contexte</strong> : Atelier, PFMP 1 ou PFMP 2' },
+        { icon: '⭐', text: 'Évaluez chaque compétence : NE → NA → EC → M → PM' },
+        { icon: '✅', text: 'Cochez les <strong>critères observés</strong> pour chaque compétence' }
+      ]
+    },
+    e32: {
+      title: '🔍 E32 — Diagnostic & Maintenance',
+      body: 'Épreuve de diagnostic. Évaluez sur des situations professionnelles :',
+      actions: [
+        { icon: '🅰️', text: '<strong>Situation A</strong> — Maintenance préventive' },
+        { icon: '🅱️', text: '<strong>Situation B</strong> — Diagnostic de panne' },
+        { icon: '📋', text: 'Chaque situation a ses compétences spécifiques' }
+      ]
+    },
+    e33: {
+      title: '📄 E33 — Dossier & Communication',
+      body: 'Épreuve de communication. L\'élève produit un dossier :',
+      actions: [
+        { icon: '📑', text: 'Évaluation du <strong>dossier technique</strong> produit par l\'élève' },
+        { icon: '🗣️', text: 'Évaluation de la <strong>communication orale</strong>' },
+        { icon: '📐', text: 'Situations D (rédaction) et E (présentation)' }
       ]
     },
     stage: {
-      title: '🏢 Suivi de stage PFMP',
-      body:
-        'Gérez les périodes de formation en milieu professionnel :\n' +
-        '• Définir les dates de PFMP\n' +
-        '• Voir les entreprises et tuteurs\n' +
-        '• Suivre le journal de stage des élèves\n' +
-        '• Consulter les évaluations tuteur',
-      tips: [
-        'Les tuteurs peuvent évaluer via leur interface dédiée (QR code).'
+      title: '🏢 Suivi de stage (PFMP)',
+      body: 'Gérez les périodes de formation en milieu professionnel.',
+      actions: [
+        { icon: '📅', text: 'Définissez les <strong>dates</strong> de PFMP 1 et PFMP 2' },
+        { icon: '🏭', text: 'Consultez les <strong>entreprises</strong> et tuteurs' },
+        { icon: '📓', text: 'Suivez le <strong>journal de stage</strong> quotidien des élèves' },
+        { icon: '📷', text: 'Consultez les <strong>photos</strong> envoyées par les élèves' }
       ]
     },
     bilan: {
       title: '🏆 Bilan & Notes',
-      body:
-        'Consultez les bilans par épreuve :\n' +
-        '• Vue d\u2019ensemble des compétences acquises\n' +
-        '• Calcul automatique des notes selon les barèmes officiels\n' +
-        '• Possibilité de clôturer une épreuve\n' +
-        '• Verrouillage des notes après clôture',
-      warnings: [
-        'Une épreuve clôturée ne peut plus être modifiée (sauf par un admin).'
+      body: 'Consultez les résultats de chaque élève.',
+      actions: [
+        { icon: '📊', text: 'Vue d\'ensemble avec <strong>notes calculées automatiquement</strong> sur 20' },
+        { icon: '🕸️', text: '<strong>Radar compétences</strong> — profil visuel de l\'élève' },
+        { icon: '📈', text: '<strong>Élève vs Classe</strong> — comparaison avec la moyenne' },
+        { icon: '🔒', text: '<strong>Clôturer</strong> une épreuve quand les évaluations sont terminées' },
+        { icon: '📄', text: '<strong>Export PDF</strong> — fiche individuelle de l\'élève' }
       ]
     },
     rapport: {
-      title: '📝 Rapport',
-      body:
-        'Générez des rapports d\u2019inspection :\n' +
-        '• Rapport PDF formaté pour les inspecteurs\n' +
-        '• Bilan complet par épreuve et par élève\n' +
-        '• Statistiques de progression',
-      tips: [
-        'Le rapport est généré localement en PDF, aucune connexion nécessaire.'
+      title: '📝 Rapport de stage',
+      body: 'Consultez et validez les rapports de stage PFMP.',
+      actions: [
+        { icon: '📋', text: 'Journal quotidien de l\'élève' },
+        { icon: '📸', text: 'Photos prises pendant le stage' },
+        { icon: '💬', text: 'Commentaires du tuteur' }
       ]
     },
     export: {
       title: '📤 Exports',
-      body:
-        'Exportez les données sous différents formats :\n' +
-        '• 📄 PDF — Fiches individuelles, grilles de compétences\n' +
-        '• 📊 Excel — Tableaux récapitulatifs\n' +
-        '• 💾 Sauvegarde — Export complet des données\n' +
-        '• 📋 Rapport d\u2019inspection — PDF formaté pour les inspecteurs',
-      tips: [
-        'Les exports PDF sont générés localement, pas besoin de connexion.'
+      body: 'Exportez vos données sous différents formats.',
+      actions: [
+        { icon: '📄', text: '<strong>PDF</strong> — Fiches individuelles, grilles de compétences' },
+        { icon: '📊', text: '<strong>Excel</strong> — Tableaux récapitulatifs de la classe' },
+        { icon: '💾', text: '<strong>Sauvegarde</strong> — Export complet de toutes les données' }
       ]
     },
     config: {
       title: '⚙️ Configuration',
-      body:
-        'Paramétrez votre installation :\n' +
-        '• URL de l\u2019API Google Apps Script\n' +
-        "• Clé d'authentification\n" +
-        '• Gestion des classes et groupes\n' +
-        "• Paramètres d'affichage"
-    },
-    admin: {
-      title: '👑 Administration',
-      body:
-        'Gérez les droits et utilisateurs :\n' +
-        '• Créer/modifier des comptes enseignants\n' +
-        '• Attribuer des classes aux enseignants\n' +
-        '• Gérer les droits (évaluation, export, clôture)',
-      warnings: [
-        'Cet onglet n\u2019est visible que pour les administrateurs.'
+      body: 'Paramétrez votre installation.',
+      actions: [
+        { icon: '🔗', text: 'URL de l\'<strong>API</strong> Google Apps Script' },
+        { icon: '🔑', text: '<strong>Clé</strong> d\'authentification' },
+        { icon: '🏫', text: 'Gestion des <strong>classes</strong> et groupes' }
       ]
     }
   };
 
-  /** Contenu pour les autres pages */
+  // Contenu pour les autres pages
   const PAGE_CONTENT = {
     eleve: {
       title: '🎓 Espace Élève',
-      body:
-        "L'élève peut :\n" +
-        '• Consulter sa progression par compétence\n' +
-        '• Voir ses évaluations avec les commentaires du professeur\n' +
-        '• Remplir son journal de stage quotidien\n' +
-        '• Voir ses informations de PFMP',
-      tips: [
-        'En mode démo, vous êtes connecté en tant que Martin DUPONT (CAP IFCA 1).',
-        'Le journal de stage permet de noter chaque jour les activités réalisées en entreprise.'
+      body: 'Consultez votre progression et vos évaluations.',
+      actions: [
+        { icon: '📊', text: 'Votre <strong>progression</strong> par compétence avec barres colorées' },
+        { icon: '📝', text: 'Vos <strong>évaluations</strong> détaillées avec commentaires du prof' },
+        { icon: '📓', text: 'Votre <strong>journal de stage</strong> à remplir chaque jour en PFMP' },
+        { icon: '🏢', text: 'Vos <strong>informations PFMP</strong> : entreprise, tuteur, dates' }
       ],
-      hints: [
-        'Les compétences en vert sont acquises, en jaune en cours d\u2019acquisition, en rouge non acquises.'
-      ]
+      tips: ['Les compétences en <strong style="color:#27ae60">vert</strong> sont acquises, en <strong style="color:#f39c12">jaune</strong> en cours, en <strong style="color:#e74c3c">rouge</strong> non acquises.']
     },
     tuteur: {
-      title: '🏢 Espace Tuteur Entreprise',
-      body:
-        'Le tuteur peut :\n' +
-        "• Évaluer les compétences de l'élève en PFMP\n" +
-        '• Noter le comportement professionnel\n' +
-        '• Ajouter des observations\n' +
-        "• Signer électroniquement l'évaluation",
-      tips: [
-        'Les niveaux vont de « Non Évalué » à « Parfaitement Maîtrisé ».',
-        "Concentrez-vous sur ce que l'élève sait FAIRE, pas sur ce qu'il sait dire.",
-        'Chaque compétence peut être évaluée à plusieurs reprises au cours du stage.'
+      title: '🏢 Espace Tuteur',
+      body: 'Évaluez votre stagiaire sur les compétences professionnelles.',
+      actions: [
+        { icon: '⭐', text: 'Pour chaque compétence, choisissez un <strong>niveau</strong> :\n<strong>NE</strong> = Non Évalué · <strong>NA</strong> = Non Acquis · <strong>EC</strong> = En Cours · <strong>M</strong> = Maîtrisé · <strong>PM</strong> = Parfait' },
+        { icon: '☑️', text: 'Cochez les <strong>tâches observées</strong> pour chaque compétence' },
+        { icon: '💬', text: 'Ajoutez une <strong>observation</strong> si besoin' },
+        { icon: '🔒', text: '<strong>Verrouillez</strong> une compétence quand vous êtes sûr de votre évaluation' },
+        { icon: '😊', text: 'Évaluez le <strong>comportement</strong> : ponctualité, EPI, initiative, etc.' }
       ],
-      hints: [
-        'Utilisez le bouton « Signer » en bas de page pour valider votre évaluation.'
-      ]
+      tips: ['Évaluez ce que le stagiaire sait <strong>FAIRE</strong>, pas ce qu\'il sait dire.', 'Vous pouvez revenir et modifier une évaluation tant qu\'elle n\'est pas verrouillée.']
     },
     admin: {
       title: '🔐 Administration',
-      body:
-        "L'administrateur peut :\n" +
-        '• Gérer les utilisateurs (enseignants, lecteurs)\n' +
-        '• Attribuer des classes par filière\n' +
-        "• Générer/régénérer les tokens d'accès élèves et tuteurs\n" +
-        "• Consulter le journal d'administration\n" +
-        '• Gérer les clés de sécurité\n' +
-        '• Configurer le guide interactif (affichage, permissions)',
-      tips: [
-        'En mode démo, la connexion est simulée.',
-        'Le guide interactif est visible par défaut pour tous les utilisateurs. Vous pouvez le configurer dans l\u2019onglet « Guide ».'
+      body: 'Gérez les utilisateurs et la configuration.',
+      actions: [
+        { icon: '👤', text: '<strong>Utilisateurs</strong> — Créer/modifier des comptes enseignants' },
+        { icon: '🏫', text: '<strong>Filières & Classes</strong> — Voir les classes par filière' },
+        { icon: '📜', text: '<strong>Journal</strong> — Historique des actions' },
+        { icon: '📖', text: '<strong>Guide</strong> — Configurer la visibilité du guide interactif' }
       ]
     }
   };
 
-  // ═══════════════════════════════════════════════════════════
-  // 3. ÉTAPES DE LA VISITE GUIDÉE (page Prof)
-  // ═══════════════════════════════════════════════════════════
-  const TOUR_STEPS_PROF = [
-    {
-      selector: '.app-header',
-      text: 'Voici la barre d\u2019en-tête. Le point vert indique que vous êtes connecté au serveur. Cliquez sur « Sync » pour synchroniser les données.'
-    },
-    {
-      selector: '[data-tab="dashboard"]',
-      text: 'Le tableau de bord affiche tous vos élèves avec leur progression. C\u2019est votre page d\u2019accueil.'
-    },
-    {
-      selector: '.filter-bar',
-      text: 'Filtrez par classe (CAP IFCA, Bac Pro MFER, 2nde TNE), par année ou par groupe pour trouver rapidement un élève.'
-    },
-    {
-      selector: '.sc, .student-grid',
-      text: 'Chaque fiche représente un élève. Les barres de couleur montrent la progression par épreuve. Cliquez pour évaluer.'
-    },
-    {
-      selector: '[data-tab="eleves"]',
-      text: 'Gérez votre liste d\u2019élèves : ajout manuel, import CSV/Excel, QR codes, synchronisation.'
-    },
-    {
-      selector: '[data-tab="activites"]',
-      text: 'Créez des TP et activités pédagogiques. C\u2019est le point d\u2019entrée principal pour évaluer les compétences.'
-    },
-    {
-      selector: '[data-tab="stage"]',
-      text: 'Suivez les PFMP : dates, entreprises, tuteurs, journal de stage et évaluations tuteur.'
-    },
-    {
-      selector: '[data-tab="bilan"]',
-      text: 'Consultez les notes et bilans par épreuve. Clôturez les épreuves quand les évaluations sont terminées.'
-    },
-    {
-      selector: '[data-tab="export"]',
-      text: 'Exportez en PDF (fiches, grilles), Excel (tableaux), ou faites une sauvegarde complète de vos données.'
-    }
+  // ═══════════════════════════════════════════════
+  // 3. VISITE GUIDÉE (page Prof)
+  // ═══════════════════════════════════════════════
+  const TOUR_PROF = [
+    { selector: '.app-header', text: '<strong>Barre d\'en-tête</strong> — Le point vert = vous êtes connecté au serveur. Cliquez sur « Sync » pour synchroniser.' },
+    { selector: '#dashFiltreClasse, .filter-bar', text: '<strong>Filtres</strong> — Choisissez une classe (CAP IFCA, Bac Pro MFER, 2nde TNE), une année ou un groupe.' },
+    { selector: '.sc, .student-grid', text: '<strong>Fiches élèves</strong> — Chaque carte montre la progression. Les barres colorées = pourcentage de compétences évaluées. <strong>Cliquez dessus</strong> pour évaluer.' },
+    { selector: '[data-tab="eleves"]', text: '<strong>Onglet Élèves</strong> — Ajoutez des élèves, importez un fichier CSV/Excel, générez les QR codes.' },
+    { selector: '[data-tab="activites"]', text: '<strong>Onglet Activités</strong> — Créez des TP et évaluez les compétences. C\'est le cœur du système.' },
+    { selector: '[data-tab="stage"]', text: '<strong>Onglet Stage</strong> — Suivez les PFMP : dates, entreprises, journal quotidien, photos.' },
+    { selector: '[data-tab="bilan"]', text: '<strong>Onglet Bilan</strong> — Notes calculées automatiquement, radars de compétences, clôture d\'épreuves, export PDF.' },
+    { selector: '[data-tab="export"]', text: '<strong>Onglet Export</strong> — Téléchargez les données en PDF, Excel, ou faites une sauvegarde complète.' }
+  ];
+  const TOUR_TUTEUR = [
+    { selector: '.app-header', text: '<strong>En-tête</strong> — Le badge indique la filière et l\'épreuve de votre stagiaire.' },
+    { selector: '.steps, .step', text: '<strong>Étapes</strong> — Suivez la progression : Bienvenue → Entreprise → Tuteur → Évaluation → Comportement → Récap.' },
+    { selector: '.comp-block, #evalContenu', text: '<strong>Évaluation</strong> — Chaque bloc = une compétence. Cliquez pour ouvrir, puis évaluez avec les boutons NE/NA/EC/M/PM.' },
+    { selector: '.tache-item, .taches-titre', text: '<strong>Tâches</strong> — Cochez les tâches que vous avez observé le stagiaire réaliser. Cliquez pour alterner ✅/❌/⬜.' },
+    { selector: '#page-behav, [onclick*="behav"]', text: '<strong>Comportement</strong> — Évaluez le savoir-être : ponctualité, EPI, initiative, communication.' }
+  ];
+  const TOUR_ELEVE = [
+    { selector: '.app-header', text: '<strong>En-tête</strong> — Votre nom et votre classe. Le point vert = connecté.' },
+    { selector: '.progression, .comp-card, [id*="progression"]', text: '<strong>Progression</strong> — Vos compétences avec leur niveau d\'acquisition. Vert = acquis, jaune = en cours.' },
+    { selector: '.journal, [id*="journal"]', text: '<strong>Journal de stage</strong> — Décrivez chaque jour ce que vous avez fait en entreprise.' }
   ];
 
-  // ═══════════════════════════════════════════════════════════
-  // 4. INJECTION DU CSS
-  // ═══════════════════════════════════════════════════════════
-  function injectStyles() {
-    if (document.getElementById('demo-guide-styles')) return;
+  function getTourSteps() {
+    const p = getPage();
+    if (p === 'prof') return TOUR_PROF;
+    if (p === 'tuteur') return TOUR_TUTEUR;
+    if (p === 'eleve') return TOUR_ELEVE;
+    return [];
+  }
 
-    const css = `
-      /* --- Panneau principal --- */
-      #demo-guide-panel {
-        position: fixed;
-        top: 0;
-        right: 0;
-        width: 320px;
-        height: 100vh;
-        background: #fff;
-        box-shadow: -4px 0 24px rgba(0,0,0,.12);
-        z-index: 9000;
-        display: flex;
-        flex-direction: column;
-        transform: translateX(100%);
-        transition: transform .3s cubic-bezier(.4,0,.2,1);
-        font-family: 'Nunito', sans-serif;
-      }
-      #demo-guide-panel.open {
-        transform: translateX(0);
-      }
-
-      /* Header */
-      #demo-guide-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #1b3a63;
-        color: #fff;
-        height: 48px;
-        min-height: 48px;
-        padding: 0 1rem;
-        font-size: 0.95rem;
-        font-weight: 700;
-      }
-      #demo-guide-header button {
-        background: none;
-        border: none;
-        color: #fff;
-        font-size: 1.3rem;
-        cursor: pointer;
-        padding: 0 4px;
-        line-height: 1;
-      }
-      #demo-guide-header button:hover { opacity: .7; }
-
-      /* Contenu */
-      #demo-guide-body {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1rem;
-        font-size: 0.85rem;
-        line-height: 1.55;
-        color: #333;
-      }
-
-      /* Titre de section */
-      .dg-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        margin-bottom: .6rem;
-        color: #1b3a63;
-      }
-
-      /* Paragraphe principal */
-      .dg-text {
-        white-space: pre-line;
-        margin-bottom: .8rem;
-      }
-      .dg-text .dg-bullet { color: #ff6b35; font-weight: 700; }
-
-      /* Bloc astuce */
-      .dg-tip {
-        background: #fef9e7;
-        border-left: 4px solid #f1c40f;
-        padding: .55rem .75rem;
-        margin-bottom: .6rem;
-        border-radius: 0 6px 6px 0;
-        font-size: 0.82rem;
-      }
-
-      /* Bloc avertissement */
-      .dg-warn {
-        background: #fde8e6;
-        border-left: 4px solid #e74c3c;
-        padding: .55rem .75rem;
-        margin-bottom: .6rem;
-        border-radius: 0 6px 6px 0;
-        font-size: 0.82rem;
-      }
-
-      /* Bloc indication */
-      .dg-hint {
-        background: #eaf4fe;
-        border-left: 4px solid #3498db;
-        padding: .55rem .75rem;
-        margin-bottom: .6rem;
-        border-radius: 0 6px 6px 0;
-        font-size: 0.82rem;
-      }
-
-      /* Badge mode démo */
-      .dg-demo-badge {
-        display: inline-block;
-        background: #ff6b35;
-        color: #fff;
-        font-size: .65rem;
-        font-weight: 800;
-        padding: .15rem .5rem;
-        border-radius: 20px;
-        margin-bottom: .8rem;
-      }
-
-      /* Bouton visite guidée */
-      #demo-guide-tour-btn {
-        display: block;
-        width: calc(100% - 2rem);
-        margin: .5rem 1rem;
-        padding: .55rem;
-        background: #ff6b35;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        cursor: pointer;
-        text-align: center;
-        font-family: 'Nunito', sans-serif;
-        transition: background .2s;
-      }
-      #demo-guide-tour-btn:hover { background: #e55a28; }
-
-      /* Séparateur */
-      .dg-sep {
-        border: none;
-        border-top: 1px solid #eee;
-        margin: .8rem 0;
-      }
-
-      /* Bouton flottant */
-      #demo-guide-fab {
-        position: fixed;
-        bottom: 5rem;
-        right: 1.5rem;
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: #1b3a63;
-        color: #fff;
-        border: none;
-        box-shadow: 0 4px 14px rgba(0,0,0,.25);
-        font-size: 1.5rem;
-        cursor: pointer;
-        z-index: 9001;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform .2s, box-shadow .2s;
-        font-family: 'Nunito', sans-serif;
-      }
-      #demo-guide-fab:hover {
-        transform: scale(1.08);
-        box-shadow: 0 6px 20px rgba(0,0,0,.3);
-      }
-      #demo-guide-fab .fab-badge {
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 16px;
-        height: 16px;
-        background: #ff6b35;
-        border-radius: 50%;
-        border: 2px solid #fff;
-      }
-
-      /* --- Visite guidée overlay --- */
-      #demo-tour-overlay {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100vw; height: 100vh;
-        z-index: 10000;
-        pointer-events: none;
-        transition: opacity .3s;
-      }
-      #demo-tour-overlay.active { pointer-events: auto; }
-
-      #demo-tour-highlight {
-        position: absolute;
-        border: 3px solid #ff6b35;
-        border-radius: 8px;
-        box-shadow: 0 0 0 9999px rgba(0,0,0,.55);
-        z-index: 10001;
-        pointer-events: none;
-        transition: all .35s cubic-bezier(.4,0,.2,1);
-        display: none;
-      }
-
-      #demo-tour-tooltip {
-        position: absolute;
-        z-index: 10002;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0,0,0,.22);
-        padding: 1rem 1.2rem;
-        max-width: 340px;
-        font-family: 'Nunito', sans-serif;
-        font-size: 0.88rem;
-        color: #333;
-        line-height: 1.5;
-        display: none;
-      }
-      .tour-step-indicator {
-        font-size: 0.72rem;
-        color: #888;
-        margin-bottom: .4rem;
-        font-weight: 700;
-      }
-      .tour-text { margin-bottom: .8rem; }
-      .tour-nav { display: flex; gap: .5rem; justify-content: flex-end; }
-      .tour-nav button {
-        padding: .35rem .8rem;
-        border: none;
-        border-radius: 6px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        cursor: pointer;
-        font-family: 'Nunito', sans-serif;
-        transition: opacity .2s;
-      }
-      .tour-nav button:hover { opacity: .85; }
-      .tour-prev { background: #eee; color: #555; }
-      .tour-next { background: #ff6b35; color: #fff; }
-      .tour-end { background: #27ae60; color: #fff; }
-
-      /* Flèche tooltip */
-      #demo-tour-tooltip::before {
-        content: '';
-        position: absolute;
-        width: 14px; height: 14px;
-        background: #fff;
-        transform: rotate(45deg);
-      }
-      #demo-tour-tooltip.arrow-top::before { top: -7px; left: 24px; }
-      #demo-tour-tooltip.arrow-bottom::before { bottom: -7px; left: 24px; }
-
-      /* --- Responsive mobile --- */
-      @media (max-width: 768px) {
-        #demo-guide-panel { width: 100%; }
-        #demo-guide-fab {
-          bottom: 4.5rem;
-          right: 1rem;
-          width: 48px;
-          height: 48px;
-          font-size: 1.3rem;
-        }
-        #demo-tour-tooltip {
-          max-width: calc(100vw - 2rem);
-          left: 1rem !important;
-          right: 1rem !important;
-        }
-      }
+  // ═══════════════════════════════════════════════
+  // 4. CSS
+  // ═══════════════════════════════════════════════
+  function injectCSS() {
+    if (document.getElementById('dg-css')) return;
+    const s = document.createElement('style');
+    s.id = 'dg-css';
+    s.textContent = `
+      #dg-panel{position:fixed;top:0;right:0;width:340px;height:100vh;background:#fff;box-shadow:-4px 0 30px rgba(0,0,0,.14);z-index:9000;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);font-family:'Nunito',sans-serif}
+      #dg-panel.open{transform:translateX(0)}
+      #dg-hdr{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#1b3a63,#2d5a8c);color:#fff;padding:0 1rem;height:52px;min-height:52px}
+      #dg-hdr h3{font-size:.92rem;font-weight:800;margin:0}
+      #dg-hdr button{background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;padding:0 4px;line-height:1;opacity:.8}
+      #dg-hdr button:hover{opacity:1}
+      #dg-body{flex:1;overflow-y:auto;padding:0}
+      .dg-welcome{background:linear-gradient(135deg,#e8f0f8,#d0e4f7);padding:1.2rem;border-bottom:1px solid #c5d8ea}
+      .dg-welcome h4{font-size:1rem;font-weight:800;color:#1b3a63;margin:0 0 .5rem}
+      .dg-welcome p{font-size:.82rem;color:#333;line-height:1.6;margin:0}
+      .dg-welcome p strong{color:#1b3a63}
+      .dg-tour-cta{display:flex;gap:.5rem;padding:.75rem 1.2rem;background:#fff8f0;border-bottom:1px solid #ffe0c0}
+      .dg-tour-cta button{flex:1;padding:.6rem;border:none;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s}
+      .dg-btn-tour{background:#ff6b35;color:#fff}.dg-btn-tour:hover{background:#e55a28}
+      .dg-btn-skip{background:#eee;color:#666}.dg-btn-skip:hover{background:#ddd}
+      .dg-section{padding:1rem 1.2rem;border-bottom:1px solid #f0f0f0}
+      .dg-section-title{font-size:.88rem;font-weight:800;color:#1b3a63;margin:0 0 .6rem;display:flex;align-items:center;gap:.4rem}
+      .dg-action{display:flex;align-items:flex-start;gap:.6rem;padding:.45rem 0;font-size:.8rem;line-height:1.5;color:#444}
+      .dg-action-ico{font-size:1rem;flex-shrink:0;width:1.2rem;text-align:center}
+      .dg-action-txt{flex:1}
+      .dg-action-txt strong{color:#1b3a63}
+      .dg-tip{background:#fef9e7;border-left:4px solid #f1c40f;padding:.5rem .75rem;margin:.4rem 0;border-radius:0 6px 6px 0;font-size:.78rem;line-height:1.5}
+      .dg-demo-tag{display:inline-block;background:#ff6b35;color:#fff;font-size:.6rem;font-weight:800;padding:.12rem .45rem;border-radius:12px;vertical-align:middle;margin-left:.4rem}
+      #dg-fab{position:fixed;bottom:5rem;right:1.5rem;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#1b3a63,#2d5a8c);color:#fff;border:none;box-shadow:0 4px 16px rgba(27,58,99,.35);font-size:1.4rem;cursor:pointer;z-index:9001;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s;font-family:'Nunito',sans-serif}
+      #dg-fab:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(27,58,99,.45)}
+      #dg-fab .fab-dot{position:absolute;top:2px;right:2px;width:14px;height:14px;background:#ff6b35;border-radius:50%;border:2px solid #fff}
+      @keyframes dg-pulse{0%{box-shadow:0 4px 16px rgba(27,58,99,.35)}50%{box-shadow:0 4px 16px rgba(27,58,99,.35),0 0 0 8px rgba(255,107,53,.25)}100%{box-shadow:0 4px 16px rgba(27,58,99,.35)}}
+      #dg-fab.pulse{animation:dg-pulse 2s ease-in-out infinite}
+      #dg-fab-tip{position:fixed;bottom:5.3rem;right:5rem;background:#1b3a63;color:#fff;font-size:.75rem;font-weight:700;padding:.35rem .7rem;border-radius:6px;z-index:9001;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .3s;font-family:'Nunito',sans-serif}
+      #dg-fab-tip::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);border:6px solid transparent;border-left-color:#1b3a63}
+      #dg-fab-tip.show{opacity:1}
+      #dg-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10000;pointer-events:none;transition:opacity .3s}
+      #dg-overlay.active{pointer-events:auto}
+      #dg-hl{position:absolute;border:3px solid #ff6b35;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.55);z-index:10001;pointer-events:none;transition:all .35s cubic-bezier(.4,0,.2,1);display:none}
+      #dg-tt{position:absolute;z-index:10002;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);padding:1rem 1.2rem;max-width:360px;font-family:'Nunito',sans-serif;font-size:.85rem;color:#333;line-height:1.55;display:none}
+      .tt-step{font-size:.68rem;color:#999;margin-bottom:.3rem;font-weight:700}
+      .tt-text{margin-bottom:.7rem}
+      .tt-text strong{color:#1b3a63}
+      .tt-nav{display:flex;gap:.4rem;justify-content:flex-end}
+      .tt-nav button{padding:.35rem .75rem;border:none;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:opacity .2s}
+      .tt-prev{background:#eee;color:#555}.tt-next{background:#ff6b35;color:#fff}.tt-end{background:#27ae60;color:#fff}
+      .tt-nav button:hover{opacity:.85}
+      #dg-tt::before{content:'';position:absolute;width:12px;height:12px;background:#fff;transform:rotate(45deg)}
+      #dg-tt.arrow-top::before{top:-6px;left:24px}
+      #dg-tt.arrow-bottom::before{bottom:-6px;left:24px}
+      @media(max-width:768px){#dg-panel{width:100%}#dg-fab{bottom:4.5rem;right:1rem;width:48px;height:48px;font-size:1.2rem}#dg-fab-tip{display:none}#dg-tt{max-width:calc(100vw - 2rem);left:1rem!important;right:1rem!important}}
     `;
-
-    const style = document.createElement('style');
-    style.id = 'demo-guide-styles';
-    style.textContent = css;
-    document.head.appendChild(style);
+    document.head.appendChild(s);
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 5. CONSTRUCTION DU DOM
-  // ═══════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════
+  // 5. DOM
+  // ═══════════════════════════════════════════════
+  let panel, fab, fabTip, overlay, tourStep = -1;
 
-  function createPanel() {
-    const panel = document.createElement('div');
-    panel.id = 'demo-guide-panel';
-
+  function buildPanel() {
+    const p = document.createElement('div');
+    p.id = 'dg-panel';
     // Header
-    const header = document.createElement('div');
-    header.id = 'demo-guide-header';
-    header.innerHTML = '<span>📖 Guide interactif</span>';
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '&times;';
-    closeBtn.title = 'Fermer le guide';
-    closeBtn.addEventListener('click', togglePanel);
-    header.appendChild(closeBtn);
-    panel.appendChild(header);
-
-    // Bouton visite guidée (page prof uniquement)
-    if (isPageProf()) {
-      const tourBtn = document.createElement('button');
-      tourBtn.id = 'demo-guide-tour-btn';
-      tourBtn.textContent = '▶ Lancer la visite guidée';
-      tourBtn.addEventListener('click', startTour);
-      panel.appendChild(tourBtn);
-    }
-
+    const h = document.createElement('div');
+    h.id = 'dg-hdr';
+    h.innerHTML = '<h3>📖 Guide interactif</h3>';
+    const cb = document.createElement('button');
+    cb.innerHTML = '&times;';
+    cb.title = 'Fermer';
+    cb.onclick = togglePanel;
+    h.appendChild(cb);
+    p.appendChild(h);
     // Body
-    const body = document.createElement('div');
-    body.id = 'demo-guide-body';
-    panel.appendChild(body);
-
-    document.body.appendChild(panel);
-    return panel;
+    const b = document.createElement('div');
+    b.id = 'dg-body';
+    p.appendChild(b);
+    document.body.appendChild(p);
+    return p;
   }
 
-  function createFAB() {
-    const fab = document.createElement('button');
-    fab.id = 'demo-guide-fab';
-    fab.innerHTML = '📖';
-    fab.title = 'Guide interactif — cliquez pour ouvrir';
-
-    // Badge "nouveau" si la visite n'a jamais été faite
-    if (isPageProf() && localStorage.getItem('demo-guide-tour-done') !== '1') {
-      const badge = document.createElement('span');
-      badge.className = 'fab-badge';
-      fab.appendChild(badge);
+  function buildFAB() {
+    const f = document.createElement('button');
+    f.id = 'dg-fab';
+    f.innerHTML = '📖';
+    f.title = 'Ouvrir le guide';
+    f.onclick = togglePanel;
+    // Badge si visite jamais faite
+    const st = loadState();
+    if (!st.tourDone) {
+      const d = document.createElement('span');
+      d.className = 'fab-dot';
+      f.appendChild(d);
     }
-
-    fab.addEventListener('click', togglePanel);
-    document.body.appendChild(fab);
-    return fab;
+    document.body.appendChild(f);
+    // Tooltip
+    const tip = document.createElement('div');
+    tip.id = 'dg-fab-tip';
+    tip.textContent = 'Guide interactif — cliquez ici !';
+    document.body.appendChild(tip);
+    return f;
   }
 
-  function createTourOverlay() {
-    const overlay = document.createElement('div');
-    overlay.id = 'demo-tour-overlay';
-
-    const highlight = document.createElement('div');
-    highlight.id = 'demo-tour-highlight';
-    overlay.appendChild(highlight);
-
-    const tooltip = document.createElement('div');
-    tooltip.id = 'demo-tour-tooltip';
-    overlay.appendChild(tooltip);
-
-    document.body.appendChild(overlay);
-    return overlay;
+  function buildOverlay() {
+    const o = document.createElement('div');
+    o.id = 'dg-overlay';
+    o.innerHTML = '<div id="dg-hl"></div><div id="dg-tt"></div>';
+    o.onclick = function(e) { if (e.target === o) endTour(); };
+    document.body.appendChild(o);
+    return o;
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 6. LOGIQUE DU PANNEAU
-  // ═══════════════════════════════════════════════════════════
-
-  let panelEl, fabEl, overlayEl;
-  let currentTourStep = -1;
-
+  // ═══════════════════════════════════════════════
+  // 6. PANNEAU
+  // ═══════════════════════════════════════════════
   function togglePanel() {
-    const isOpen = panelEl.classList.toggle('open');
-    localStorage.setItem('demo-guide-open', isOpen ? '1' : '0');
+    const open = panel.classList.toggle('open');
+    const st = loadState();
+    st.open = open;
+    saveState(st);
+    if (fabTip) fabTip.classList.remove('show');
+    if (fab) fab.classList.remove('pulse');
   }
-
   function openPanel() {
-    if (!panelEl.classList.contains('open')) {
-      panelEl.classList.add('open');
-      localStorage.setItem('demo-guide-open', '1');
+    if (!panel.classList.contains('open')) {
+      panel.classList.add('open');
+      const st = loadState();
+      st.open = true;
+      saveState(st);
     }
+    if (fabTip) fabTip.classList.remove('show');
+    if (fab) fab.classList.remove('pulse');
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 7. DÉTECTION DE PAGE
-  // ═══════════════════════════════════════════════════════════
-
-  function getPageKey() {
-    const path = location.pathname.toLowerCase();
-    if (path.includes('inerweb_prof')) return 'prof';
-    if (path.includes('inerweb_eleve')) return 'eleve';
-    if (path.includes('inerweb_tuteur')) return 'tuteur';
-    if (path.includes('inerweb_admin')) return 'admin';
-    return 'unknown';
+  // ═══════════════════════════════════════════════
+  // 7. RENDU CONTENU
+  // ═══════════════════════════════════════════════
+  function renderActions(actions) {
+    if (!actions || !actions.length) return '';
+    return actions.map(function(a) {
+      return '<div class="dg-action"><span class="dg-action-ico">' + a.icon + '</span><div class="dg-action-txt">' + a.text + '</div></div>';
+    }).join('');
   }
 
-  function isPageProf() {
-    return getPageKey() === 'prof';
+  function renderTips(tips) {
+    if (!tips || !tips.length) return '';
+    return tips.map(function(t) { return '<div class="dg-tip">💡 ' + t + '</div>'; }).join('');
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 8. RENDU DU CONTENU
-  // ═══════════════════════════════════════════════════════════
-
-  function formatBody(text) {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/•/g, '<span class="dg-bullet">•</span>')
-      .replace(/\n/g, '<br>');
-  }
-
-  function renderContent(data) {
-    if (!data) return '<p style="color:#999;text-align:center;padding:2rem 0">Aucun guide disponible pour cette page.</p>';
-
+  function updateBody(tabId) {
+    const body = document.getElementById('dg-body');
+    if (!body) return;
+    const page = getPage();
     let html = '';
 
-    // Badge mode démo
-    if (isDemoMode()) {
-      html += '<span class="dg-demo-badge">MODE DÉMO</span> ';
+    // Écran d'accueil en mode démo
+    if (isDemo()) {
+      const w = WELCOME[page];
+      if (w) {
+        html += '<div class="dg-welcome"><h4>' + w.title + '</h4><p>' + w.body + '</p></div>';
+      }
+      // Boutons visite guidée
+      const steps = getTourSteps();
+      if (steps.length) {
+        const st = loadState();
+        html += '<div class="dg-tour-cta">';
+        html += '<button class="dg-btn-tour" onclick="window._dgStartTour()">▶ ' + (st.tourDone ? 'Relancer la visite' : 'Visite guidée') + '</button>';
+        if (!st.tourDone) html += '<button class="dg-btn-skip" onclick="window._dgSkipTour()">Plus tard</button>';
+        html += '</div>';
+      }
     }
 
-    html += '<div class="dg-title">' + data.title + '</div>';
-    html += '<div class="dg-text">' + formatBody(data.body) + '</div>';
-
-    if (data.tips && data.tips.length) {
-      data.tips.forEach(function (tip) {
-        html += '<div class="dg-tip">💡 ' + tip + '</div>';
-      });
-    }
-    if (data.warnings && data.warnings.length) {
-      data.warnings.forEach(function (w) {
-        html += '<div class="dg-warn">⚠️ ' + w + '</div>';
-      });
-    }
-    if (data.hints && data.hints.length) {
-      data.hints.forEach(function (h) {
-        html += '<div class="dg-hint">👆 ' + h + '</div>';
-      });
-    }
-    return html;
-  }
-
-  function updateContent(tabId) {
-    var body = document.getElementById('demo-guide-body');
-    if (!body) return;
-
-    var pageKey = getPageKey();
-    var data = null;
-
-    if (pageKey === 'prof') {
+    // Contenu contextuel
+    let data = null;
+    if (page === 'prof') {
       data = PROF_TABS[tabId] || PROF_TABS['dashboard'];
     } else {
-      data = PAGE_CONTENT[pageKey];
+      data = PAGE_CONTENT[page];
     }
 
-    body.innerHTML = renderContent(data);
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // 9. OBSERVATION DES ONGLETS (page Prof)
-  // ═══════════════════════════════════════════════════════════
-
-  function observeTabs() {
-    if (!isPageProf()) return;
-
-    // Onglet actif au chargement
-    var activeBtn = document.querySelector('.nav-btn.active');
-    if (activeBtn) {
-      updateContent(activeBtn.dataset.tab || 'dashboard');
-    } else {
-      updateContent('dashboard');
+    if (data) {
+      html += '<div class="dg-section">';
+      html += '<div class="dg-section-title">' + data.title;
+      if (isDemo()) html += '<span class="dg-demo-tag">DÉMO</span>';
+      html += '</div>';
+      if (data.body) html += '<div style="font-size:.82rem;color:#555;line-height:1.6;margin-bottom:.5rem">' + data.body + '</div>';
+      html += renderActions(data.actions);
+      html += renderTips(data.tips);
+      html += '</div>';
     }
 
-    // Écoute les clics sur les onglets
-    document.addEventListener('click', function (e) {
-      var btn = e.target.closest('.nav-btn');
-      if (!btn) return;
-      var tabId = btn.dataset.tab;
-      if (tabId) {
-        setTimeout(function () { updateContent(tabId); }, 50);
-      }
-    });
+    // Pas de contenu du tout
+    if (!html) {
+      html = '<div style="text-align:center;color:#999;padding:3rem 1rem;font-size:.85rem">Aucun guide disponible pour cette page.</div>';
+    }
+
+    body.innerHTML = html;
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 10. VISITE GUIDÉE
-  // ═══════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════
+  // 8. VISITE GUIDÉE
+  // ═══════════════════════════════════════════════
+  window._dgStartTour = function() { startTour(); };
+  window._dgSkipTour = function() {
+    const st = loadState();
+    st.tourSkipped = true;
+    saveState(st);
+  };
 
   function startTour() {
-    currentTourStep = 0;
-    overlayEl.classList.add('active');
-    showTourStep();
-    if (panelEl.classList.contains('open')) {
-      panelEl.classList.remove('open');
-    }
+    tourStep = 0;
+    overlay.classList.add('active');
+    if (panel.classList.contains('open')) panel.classList.remove('open');
+    showStep();
   }
 
   function endTour() {
-    currentTourStep = -1;
-    overlayEl.classList.remove('active');
-    document.getElementById('demo-tour-highlight').style.display = 'none';
-    document.getElementById('demo-tour-tooltip').style.display = 'none';
-    localStorage.setItem('demo-guide-tour-done', '1');
-    // Retirer le badge "nouveau" du FAB
-    var badge = fabEl.querySelector('.fab-badge');
-    if (badge) badge.remove();
+    tourStep = -1;
+    overlay.classList.remove('active');
+    document.getElementById('dg-hl').style.display = 'none';
+    document.getElementById('dg-tt').style.display = 'none';
+    const st = loadState();
+    st.tourDone = true;
+    saveState(st);
+    // Retirer le badge
+    const dot = fab.querySelector('.fab-dot');
+    if (dot) dot.remove();
     openPanel();
+    updateBody(getActiveTab());
   }
 
-  function showTourStep() {
-    var steps = TOUR_STEPS_PROF;
-    if (currentTourStep < 0 || currentTourStep >= steps.length) {
-      endTour();
-      return;
+  function showStep() {
+    const steps = getTourSteps();
+    if (tourStep < 0 || tourStep >= steps.length) { endTour(); return; }
+
+    const step = steps[tourStep];
+    const targets = step.selector.split(',').map(function(s) { return s.trim(); });
+    let el = null;
+    for (let i = 0; i < targets.length; i++) {
+      el = document.querySelector(targets[i]);
+      if (el) break;
     }
 
-    var step = steps[currentTourStep];
-    var el = document.querySelector(step.selector);
-    var highlight = document.getElementById('demo-tour-highlight');
-    var tooltip = document.getElementById('demo-tour-tooltip');
+    if (!el) { tourStep++; if (tourStep >= steps.length) endTour(); else showStep(); return; }
 
-    if (!el) {
-      currentTourStep++;
-      if (currentTourStep >= steps.length) { endTour(); } else { showTourStep(); }
-      return;
-    }
-
-    var rect = el.getBoundingClientRect();
-    var pad = 6;
-    highlight.style.display = 'block';
-    highlight.style.top = (rect.top - pad) + 'px';
-    highlight.style.left = (rect.left - pad) + 'px';
-    highlight.style.width = (rect.width + pad * 2) + 'px';
-    highlight.style.height = (rect.height + pad * 2) + 'px';
+    const hl = document.getElementById('dg-hl');
+    const tt = document.getElementById('dg-tt');
+    const rect = el.getBoundingClientRect();
+    const pad = 6;
 
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    var isLast = currentTourStep === steps.length - 1;
-    var isFirst = currentTourStep === 0;
+    setTimeout(function() {
+      const rect2 = el.getBoundingClientRect();
+      hl.style.display = 'block';
+      hl.style.top = (rect2.top - pad) + 'px';
+      hl.style.left = (rect2.left - pad) + 'px';
+      hl.style.width = (rect2.width + pad * 2) + 'px';
+      hl.style.height = (rect2.height + pad * 2) + 'px';
 
-    var html = '';
-    html += '<div class="tour-step-indicator">Étape ' + (currentTourStep + 1) + ' sur ' + steps.length + '</div>';
-    html += '<div class="tour-text">' + step.text + '</div>';
-    html += '<div class="tour-nav">';
-    if (!isFirst) {
-      html += '<button class="tour-prev">◀ Précédent</button>';
-    }
-    if (isLast) {
-      html += '<button class="tour-end">✔ Terminer</button>';
-    } else {
-      html += '<button class="tour-next">Suivant ▶</button>';
-    }
-    html += '</div>';
-    tooltip.innerHTML = html;
+      const isLast = tourStep === steps.length - 1;
+      const isFirst = tourStep === 0;
 
-    tooltip.style.display = 'block';
-    tooltip.className = '';
+      let h = '<div class="tt-step">Étape ' + (tourStep + 1) + ' / ' + steps.length + '</div>';
+      h += '<div class="tt-text">' + step.text + '</div>';
+      h += '<div class="tt-nav">';
+      if (!isFirst) h += '<button class="tt-prev" onclick="event.stopPropagation();window._dgPrev()">◀ Précédent</button>';
+      if (isLast) h += '<button class="tt-end" onclick="event.stopPropagation();window._dgEnd()">✅ Terminer</button>';
+      else h += '<button class="tt-next" onclick="event.stopPropagation();window._dgNext()">Suivant ▶</button>';
+      h += '</div>';
+      tt.innerHTML = h;
+      tt.style.display = 'block';
+      tt.className = '';
 
-    var tooltipTop = rect.bottom + 16;
-    var tooltipLeft = Math.max(8, rect.left);
-
-    if (tooltipTop + 140 > window.innerHeight) {
-      tooltipTop = Math.max(8, rect.top - 160);
-      tooltip.classList.add('arrow-bottom');
-    } else {
-      tooltip.classList.add('arrow-top');
-    }
-
-    if (tooltipLeft + 340 > window.innerWidth) {
-      tooltipLeft = Math.max(8, window.innerWidth - 350);
-    }
-
-    tooltip.style.top = tooltipTop + 'px';
-    tooltip.style.left = tooltipLeft + 'px';
-
-    // Navigation
-    var prevBtn = tooltip.querySelector('.tour-prev');
-    var nextBtn = tooltip.querySelector('.tour-next');
-    var endBtn = tooltip.querySelector('.tour-end');
-
-    if (prevBtn) prevBtn.addEventListener('click', function (e) { e.stopPropagation(); currentTourStep--; showTourStep(); });
-    if (nextBtn) nextBtn.addEventListener('click', function (e) { e.stopPropagation(); currentTourStep++; showTourStep(); });
-    if (endBtn) endBtn.addEventListener('click', function (e) { e.stopPropagation(); endTour(); });
+      let top = rect2.bottom + 14;
+      let left = Math.max(8, rect2.left);
+      if (top + 160 > window.innerHeight) { top = Math.max(8, rect2.top - 170); tt.classList.add('arrow-bottom'); }
+      else tt.classList.add('arrow-top');
+      if (left + 360 > window.innerWidth) left = Math.max(8, window.innerWidth - 370);
+      tt.style.top = top + 'px';
+      tt.style.left = left + 'px';
+    }, 150);
   }
 
-  function onOverlayClick(e) {
-    if (e.target === overlayEl) endTour();
+  window._dgPrev = function() { tourStep--; showStep(); };
+  window._dgNext = function() { tourStep++; showStep(); };
+  window._dgEnd = function() { endTour(); };
+
+  function getActiveTab() {
+    if (getPage() !== 'prof') return getPage();
+    const btn = document.querySelector('.nav-btn.active');
+    return btn ? (btn.dataset.tab || 'dashboard') : 'dashboard';
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 11. INITIALISATION
-  // ═══════════════════════════════════════════════════════════
-
+  // ═══════════════════════════════════════════════
+  // 9. INIT
+  // ═══════════════════════════════════════════════
   function init() {
-    // Vérifier les permissions
-    if (!shouldShowGuide()) return;
+    if (!shouldShow()) return;
 
-    injectStyles();
-
-    panelEl = createPanel();
-    fabEl = createFAB();
-    overlayEl = createTourOverlay();
-
-    overlayEl.addEventListener('click', onOverlayClick);
+    injectCSS();
+    panel = buildPanel();
+    fab = buildFAB();
+    fabTip = document.getElementById('dg-fab-tip');
+    overlay = buildOverlay();
 
     // Contenu initial
-    if (isPageProf()) {
-      observeTabs();
-    } else {
-      updateContent(getPageKey());
+    updateBody(getActiveTab());
+
+    // Observer les changements d'onglet (page prof)
+    if (getPage() === 'prof') {
+      document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.nav-btn');
+        if (btn && btn.dataset.tab) setTimeout(function() { updateBody(btn.dataset.tab); }, 80);
+      });
     }
 
-    // Restaurer l'état du panneau
-    var savedState = localStorage.getItem('demo-guide-open');
-    if (savedState === '1') {
-      panelEl.classList.add('open');
-    }
-    // Première visite sur la page prof : ouvrir automatiquement
-    else if (savedState === null && isPageProf()) {
+    // État du panneau
+    const st = loadState();
+
+    if (isDemo()) {
+      // Mode démo : ouvrir automatiquement + pulse sur le FAB
       openPanel();
+      fab.classList.add('pulse');
+      // Afficher le tooltip du FAB après un petit délai
+      setTimeout(function() {
+        if (fabTip && !panel.classList.contains('open')) fabTip.classList.add('show');
+        setTimeout(function() { if (fabTip) fabTip.classList.remove('show'); }, 5000);
+      }, 2000);
+    } else if (st.open) {
+      panel.classList.add('open');
     }
 
-    // Repositionner le tooltip si on redimensionne
-    window.addEventListener('resize', function () {
-      if (currentTourStep >= 0) showTourStep();
-    });
+    // Redimensionnement
+    window.addEventListener('resize', function() { if (tourStep >= 0) showStep(); });
   }
 
-  // Lancement
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    // Petit délai pour laisser l'app se charger
-    setTimeout(init, 300);
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function() { setTimeout(init, 300); });
+  else setTimeout(init, 300);
 
 })();
