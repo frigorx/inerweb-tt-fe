@@ -169,6 +169,7 @@ tr:hover{background:var(--bleu3);}
     <button class="tab" onclick="switchTab('tokens')">🎫 Tokens élèves</button>
     <button class="tab" onclick="switchTab('keys')">🔑 Clés système</button>
     <button class="tab" onclick="switchTab('log')">📋 Journal</button>
+    <button class="tab" onclick="switchTab('guide')">📖 Guide</button>
   </div>
   
   <!-- TAB: USERS -->
@@ -332,7 +333,70 @@ tr:hover{background:var(--bleu3);}
       <div id="logList"></div>
     </div>
   </div>
-  
+
+  <!-- TAB: GUIDE -->
+  <div class="tab-content" id="tab-guide">
+    <div class="card">
+      <div class="card-title">📖 Configuration du guide interactif</div>
+      <p style="font-size:.85rem;color:var(--gris);margin-bottom:1rem">
+        Le guide interactif aide les utilisateurs à découvrir le logiciel. Par défaut, il est visible pour tous.
+      </p>
+
+      <div class="fr" style="margin-bottom:1rem">
+        <label>État global</label>
+        <label style="font-size:.88rem;display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.3rem 0">
+          <input type="checkbox" id="guideEnabled" checked onchange="updateGuideConfig()"> Activer le guide interactif
+        </label>
+        <label style="font-size:.88rem;display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.3rem 0">
+          <input type="checkbox" id="guideForceDemo" onchange="updateGuideConfig()"> Uniquement en mode démo (?demo=1)
+        </label>
+      </div>
+
+      <div class="fr" style="margin-bottom:1rem">
+        <label>Permissions par rôle</label>
+        <p style="font-size:.78rem;color:var(--gris);margin-bottom:.5rem">Cochez les pages que chaque rôle peut voir dans le guide.</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <div class="card" style="margin:0;padding:.75rem;border:2px solid #2d5a8c">
+            <div style="font-size:.8rem;font-weight:800;color:#2d5a8c;margin-bottom:.5rem">👨‍🏫 Professeur</div>
+            <label style="font-size:.82rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+              <input type="checkbox" class="guide-perm" data-role="prof" data-page="all" checked onchange="updateGuideConfig()"> Toutes les pages
+            </label>
+          </div>
+
+          <div class="card" style="margin:0;padding:.75rem;border:2px solid #16a085">
+            <div style="font-size:.8rem;font-weight:800;color:#16a085;margin-bottom:.5rem">🏢 Tuteur</div>
+            <label style="font-size:.82rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+              <input type="checkbox" class="guide-perm" data-role="tuteur" data-page="all" checked onchange="updateGuideConfig()"> Toutes les pages
+            </label>
+          </div>
+
+          <div class="card" style="margin:0;padding:.75rem;border:2px solid #8e44ad">
+            <div style="font-size:.8rem;font-weight:800;color:#8e44ad;margin-bottom:.5rem">🎓 Élève</div>
+            <label style="font-size:.82rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+              <input type="checkbox" class="guide-perm" data-role="eleve" data-page="all" checked onchange="updateGuideConfig()"> Toutes les pages
+            </label>
+          </div>
+
+          <div class="card" style="margin:0;padding:.75rem;border:2px solid #ff6b35">
+            <div style="font-size:.8rem;font-weight:800;color:#ff6b35;margin-bottom:.5rem">🔐 Admin</div>
+            <label style="font-size:.82rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+              <input type="checkbox" class="guide-perm" data-role="admin" data-page="all" checked onchange="updateGuideConfig()"> Toutes les pages
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔗 Accès direct</div>
+      <div class="btn-group">
+        <a href="demo.html" class="btn btn-orange" target="_blank">🎓 Portail Formation & Démo</a>
+        <a href="inerweb_prof.html?demo=1" class="btn btn-violet" target="_blank">🎮 Mode démo Prof</a>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- MODAL: USER -->
@@ -485,6 +549,7 @@ async function login(){
     renderUsers();
     loadEleves();
     loadLog();
+    renderGuideConfig();
   }catch(e){
     console.error('[admin] Erreur connexion :',e);
     toast('Erreur connexion : '+e.message,'err');
@@ -694,9 +759,49 @@ function toast(msg,type='inf'){
   t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);
   setTimeout(()=>t.remove(),3500);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CONFIGURATION DU GUIDE INTERACTIF
+   ═══════════════════════════════════════════════════════════ */
+function loadGuideConfigAdmin() {
+  try {
+    const raw = localStorage.getItem('inerweb-tt-fe-guide-cfg');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { enabled: true, forceDemo: false, roles: { prof: ['all'], tuteur: ['all'], eleve: ['all'], admin: ['all'] } };
+}
+
+function renderGuideConfig() {
+  const cfg = loadGuideConfigAdmin();
+  document.getElementById('guideEnabled').checked = cfg.enabled !== false;
+  document.getElementById('guideForceDemo').checked = cfg.forceDemo === true;
+
+  document.querySelectorAll('.guide-perm').forEach(cb => {
+    const role = cb.dataset.role;
+    const pages = cfg.roles && cfg.roles[role] ? cfg.roles[role] : ['all'];
+    cb.checked = pages.includes('all');
+  });
+}
+
+function updateGuideConfig() {
+  const cfg = {
+    enabled: document.getElementById('guideEnabled').checked,
+    forceDemo: document.getElementById('guideForceDemo').checked,
+    roles: {}
+  };
+
+  document.querySelectorAll('.guide-perm').forEach(cb => {
+    const role = cb.dataset.role;
+    cfg.roles[role] = cb.checked ? ['all'] : [];
+  });
+
+  localStorage.setItem('inerweb-tt-fe-guide-cfg', JSON.stringify(cfg));
+  toast('Configuration du guide sauvegardée', 'ok');
+}
 </script>
 <!-- Bouton aide flottant -->
 <a href="aide.html#admin" target="_blank" rel="noopener noreferrer" title="Guide d'utilisation — Administration" style="position:fixed;bottom:1.5rem;right:1.5rem;width:52px;height:52px;background:#ff6b35;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;text-decoration:none;box-shadow:0 4px 20px rgba(255,107,53,.4);z-index:9999;transition:transform .2s,box-shadow .2s;font-family:'Nunito',sans-serif;" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 6px 28px rgba(255,107,53,.5)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 20px rgba(255,107,53,.4)'">?</a>
 
+<script src="js/demo-guide.js" defer></script>
 </body>
 </html>
