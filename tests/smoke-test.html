@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smoke Tests — inerWeb TT FE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#1a1a2e;color:#e0e0e0;padding:2rem}
+h1{text-align:center;margin-bottom:.5rem;color:#fff;font-size:1.6rem}
+#summary{text-align:center;margin-bottom:1.5rem;font-size:1.1rem}
+#results{max-width:800px;margin:0 auto}
+.test{padding:.6rem 1rem;margin:.3rem 0;border-radius:6px;font-size:.85rem;display:flex;align-items:center;gap:.6rem}
+.test.pass{background:#0d3320;border-left:4px solid #27ae60}
+.test.fail{background:#3d1515;border-left:4px solid #e74c3c}
+.icon{font-size:1.1rem;flex-shrink:0}
+.pass .icon{color:#2ecc71}
+.fail .icon{color:#e74c3c}
+.label{flex:1}
+.detail{font-size:.75rem;color:#999;margin-left:auto;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<h1>Smoke Tests — inerWeb TT FE</h1>
+<div id="summary">Chargement...</div>
+<div id="results"></div>
+
+<!-- Charger core.js en premier (comme en production) -->
+<script src="../js/core.js"></script>
+
+<!-- Charger les autres modules dans l'ordre de production -->
+<script src="../js/sync-queue.js"></script>
+<script src="../js/jury.js"></script>
+<script src="../js/phases.js"></script>
+<script src="../js/exposition.js"></script>
+<script src="../js/impossibilites.js"></script>
+<script src="../js/activites.js"></script>
+<script src="../js/tp-manager.js"></script>
+<script src="../js/photos.js"></script>
+<script src="../js/tache-complexe.js"></script>
+<script src="../js/signatures.js"></script>
+<script src="../js/rapport-pdf.js"></script>
+<script src="../js/fusion-eval.js"></script>
+<script src="../js/historique.js"></script>
+<script src="../js/eval-tuteur.js"></script>
+<script src="../js/alertes.js"></script>
+<script src="../js/export-excel.js"></script>
+<script src="../js/radar.js"></script>
+<script src="../js/demo-guide.js"></script>
+
+<script>
+(function(){
+  'use strict';
+
+  var passed = 0, failed = 0;
+  var container = document.getElementById('results');
+
+  function assert(name, fn) {
+    var ok = false, detail = '';
+    try {
+      var result = fn();
+      if (result === true) { ok = true; }
+      else { detail = 'Retour: ' + JSON.stringify(result); }
+    } catch(e) {
+      detail = e.message || String(e);
+    }
+    if (ok) passed++; else failed++;
+    var div = document.createElement('div');
+    div.className = 'test ' + (ok ? 'pass' : 'fail');
+    div.innerHTML = '<span class="icon">' + (ok ? '&#10003;' : '&#10007;') + '</span>'
+      + '<span class="label">' + name + '</span>'
+      + (detail ? '<span class="detail">' + detail + '</span>' : '');
+    container.appendChild(div);
+  }
+
+  /* ═══ TESTS ═══ */
+
+  // iwCore
+  assert('window.iwCore existe', function(){ return typeof window.iwCore === 'object' && window.iwCore !== null; });
+  assert('iwCore.esc est une fonction', function(){ return typeof window.iwCore.esc === 'function'; });
+  assert('iwCore.toast est une fonction', function(){ return typeof window.iwCore.toast === 'function'; });
+  assert('iwCore.dateFR est une fonction', function(){ return typeof window.iwCore.dateFR === 'function'; });
+  assert('iwCore.safeParse est une fonction', function(){ return typeof window.iwCore.safeParse === 'function'; });
+  assert('iwCore.formatWA est une fonction', function(){ return typeof window.iwCore.formatWA === 'function'; });
+  assert('iwCore.dateISO est une fonction', function(){ return typeof window.iwCore.dateISO === 'function'; });
+  assert('iwCore.lsGet est une fonction', function(){ return typeof window.iwCore.lsGet === 'function'; });
+  assert('iwCore.lsSet est une fonction', function(){ return typeof window.iwCore.lsSet === 'function'; });
+  assert('iwCore.showModal est une fonction', function(){ return typeof window.iwCore.showModal === 'function'; });
+  assert('iwCore.closeModal est une fonction', function(){ return typeof window.iwCore.closeModal === 'function'; });
+
+  // Fonctions globales retro-compat
+  assert('window.esc est une fonction', function(){ return typeof window.esc === 'function'; });
+  assert('window.toast est une fonction', function(){ return typeof window.toast === 'function'; });
+
+  // Test fonctionnel esc
+  assert('esc("<b>") retourne "&lt;b&gt;"', function(){
+    return window.esc('<b>') === '&lt;b&gt;';
+  });
+
+  // Test fonctionnel formatWA
+  assert('formatWA("06 12 34 56 78") retourne "33612345678"', function(){
+    return window.formatWA('06 12 34 56 78') === '33612345678';
+  });
+
+  // Test fonctionnel dateFR
+  assert('dateFR("2026-01-15") retourne "15/01/2026"', function(){
+    return window.dateFR('2026-01-15') === '15/01/2026';
+  });
+
+  // Test fonctionnel safeParse
+  assert('safeParse(\'{"a":1}\').a === 1', function(){
+    return window.safeParse('{"a":1}').a === 1;
+  });
+  assert('safeParse("broken", []).length === 0', function(){
+    var r = window.safeParse('broken', []);
+    return Array.isArray(r) && r.length === 0;
+  });
+
+  // FILIERES
+  assert('window.FILIERES existe', function(){
+    return typeof window.FILIERES === 'object' && window.FILIERES !== null;
+  });
+  assert('FILIERES contient CAP_IFCA', function(){ return 'CAP_IFCA' in (window.FILIERES || {}); });
+  assert('FILIERES contient MFER', function(){ return 'MFER' in (window.FILIERES || {}); });
+  assert('FILIERES contient TNE', function(){ return 'TNE' in (window.FILIERES || {}); });
+  assert('window.getFiliere est une fonction', function(){ return typeof window.getFiliere === 'function'; });
+
+  // Modules
+  assert('window.radarModule existe', function(){ return typeof window.radarModule === 'object' && window.radarModule !== null; });
+  assert('window.juryModule existe', function(){ return typeof window.juryModule === 'object' && window.juryModule !== null; });
+  assert('window.fusionModule existe', function(){ return typeof window.fusionModule === 'object' && window.fusionModule !== null; });
+
+  // appState (Tache 15)
+  assert('window.appState existe', function(){ return typeof window.appState === 'object' && window.appState !== null; });
+
+  // Variables globales via alias
+  assert('window.students est un array', function(){ return Array.isArray(window.students); });
+  assert('window.validations est un array ou objet', function(){
+    var v = window.validations;
+    return v !== undefined && v !== null && typeof v === 'object';
+  });
+
+  /* ═══ RÉSUMÉ ═══ */
+  var sum = document.getElementById('summary');
+  var total = passed + failed;
+  sum.innerHTML = '<strong>' + passed + '</strong> / ' + total + ' tests OK'
+    + (failed > 0 ? ' &mdash; <span style="color:#e74c3c;font-weight:bold">' + failed + ' FAIL</span>' : ' &mdash; <span style="color:#2ecc71;font-weight:bold">Tout est OK !</span>');
+})();
+</script>
+
+</body>
+</html>

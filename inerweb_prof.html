@@ -17,7 +17,8 @@
   var v = Date.now();
   var mods = ['core','sync-queue','jury','phases','exposition','impossibilites',
               'activites','tp-manager','photos','tache-complexe','signatures','rapport-pdf','fusion-eval',
-              'historique','eval-tuteur','alertes','export-excel','radar'];
+              'historique','eval-tuteur','alertes','export-excel','radar',
+              'partenaires','documents','export-mod','journal-mod','scanner'];
   mods.forEach(function(m){
     var s = document.createElement('script');
     s.src = 'js/' + m + '.js?v=' + v;
@@ -62,7 +63,9 @@
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
 body{font-family:'Nunito',sans-serif;color:var(--texte);background:var(--gris2);min-height:100dvh;}
 input,select,textarea,button{font-family:inherit;}
-:focus-visible{outline:2.5px solid var(--bleu2);outline-offset:2px;border-radius:4px;}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+.skip-link{position:absolute;top:-40px;left:0;background:var(--bleu);color:#fff;padding:8px 16px;z-index:10000;font-size:14px;transition:top .2s;}
+.skip-link:focus{top:0;}
 
 /* [2] Écran config */
 #screen-config{display:none;min-height:100dvh;background:linear-gradient(135deg,var(--bleu),var(--bleu2));align-items:center;justify-content:center;padding:1.5rem;}
@@ -364,6 +367,7 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
 </style>
 </head>
 <body class="show-config">
+<a href="#main-content" class="skip-link">Aller au contenu principal</a>
 
 <!-- ÉCRAN CONFIG -->
 <div id="screen-config">
@@ -422,8 +426,8 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
     </div>
     <div class="hdr-right">
       <div class="sync-pill" onclick="syncAll()"><span class="sync-dot syncing" id="syncDot"></span><span id="syncLbl">Sync...</span><span id="syncBadge" style="display:none;background:var(--orange);color:#fff;font-size:.65rem;font-weight:800;padding:.1rem .4rem;border-radius:10px;margin-left:.3rem;">0</span></div>
-      <button class="btn btn-ghost btn-xs" onclick="showParamModal()">⚙️</button>
-      <button class="btn btn-ghost btn-xs" onclick="doLogout()" title="Déconnexion" style="font-size:.8rem">🚪</button>
+      <button class="btn btn-ghost btn-xs" onclick="showParamModal()" aria-label="Paramètres">⚙️</button>
+      <button class="btn btn-ghost btn-xs" onclick="doLogout()" title="Déconnexion" aria-label="Déconnexion" style="font-size:.8rem">🚪</button>
     </div>
   </header>
 
@@ -447,7 +451,7 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
     <button class="nav-btn" data-tab="e33" onclick="switchTab('e33')" style="display:none"><span class="ni">📋</span>E33</button>
   </nav>
 
-  <main class="main-content" role="main">
+  <main class="main-content" role="main" id="main-content">
 
     <!-- DASHBOARD -->
     <div class="tab-pane active" id="tab-dashboard"><div class="tab-inner">
@@ -462,12 +466,12 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
         <select id="dashFiltreClasse" onchange="renderDash()" style="font-weight:700;min-width:160px">
           <option value="" disabled>— Choisir une classe —</option>
         </select>
-        <select id="dashFiltreAnnee" onchange="renderDash()">
+        <select id="dashFiltreAnnee" onchange="renderDash()" aria-label="Filtrer par année">
           <option value="all">Toutes années</option>
           <option value="1">1ère année</option>
           <option value="2">2ème année</option>
         </select>
-        <select id="dashFiltreGroupe" onchange="renderDash()">
+        <select id="dashFiltreGroupe" onchange="renderDash()" aria-label="Filtrer par groupe">
           <option value="all">Tous groupes</option>
           <option value="G1">Groupe 1</option>
           <option value="G2">Groupe 2</option>
@@ -494,15 +498,15 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
       </div>
       <div class="filter-bar">
         <label>Filtrer :</label>
-        <select id="filtreClasse" onchange="renderEleves()">
+        <select id="filtreClasse" onchange="renderEleves()" aria-label="Filtrer par classe">
           <option value="all">Toutes classes</option>
         </select>
-        <select id="filtreAnnee" onchange="renderEleves()">
+        <select id="filtreAnnee" onchange="renderEleves()" aria-label="Filtrer par année">
           <option value="all">Toutes années</option>
           <option value="1">1ère année</option>
           <option value="2">2ème année</option>
         </select>
-        <select id="filtreGroupe" onchange="renderEleves()">
+        <select id="filtreGroupe" onchange="renderEleves()" aria-label="Filtrer par groupe">
           <option value="all">Tous groupes</option>
           <option value="G1">Groupe 1</option>
           <option value="G2">Groupe 2</option>
@@ -519,8 +523,8 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
     <div class="tab-pane" id="tab-e31"><div class="tab-inner">
       <div class="eval-hdr">
         <div class="eval-sel-wrap">
-          <select id="selE31" onchange="selectStudent(this.value,'e31')"></select>
-          <div class="nav-arrows"><button onclick="navStudent(-1,'e31')">◀</button><button onclick="navStudent(1,'e31')">▶</button></div>
+          <select id="selE31" onchange="selectStudent(this.value,'e31')" aria-label="Sélection élève E31"></select>
+          <div class="nav-arrows"><button onclick="navStudent(-1,'e31')" aria-label="Élève précédent">◀</button><button onclick="navStudent(1,'e31')" aria-label="Élève suivant">▶</button></div>
         </div>
         <span class="badge b-e31">E31 — Réalisation & MeS</span>
       </div>
@@ -537,8 +541,8 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
     <div class="tab-pane" id="tab-e32"><div class="tab-inner">
       <div class="eval-hdr">
         <div class="eval-sel-wrap">
-          <select id="selE32" onchange="selectStudent(this.value,'e32')"></select>
-          <div class="nav-arrows"><button onclick="navStudent(-1,'e32')">◀</button><button onclick="navStudent(1,'e32')">▶</button></div>
+          <select id="selE32" onchange="selectStudent(this.value,'e32')" aria-label="Sélection élève E32"></select>
+          <div class="nav-arrows"><button onclick="navStudent(-1,'e32')" aria-label="Élève précédent">◀</button><button onclick="navStudent(1,'e32')" aria-label="Élève suivant">▶</button></div>
         </div>
         <span class="badge b-e32">E32 — Diagnostic & Maintenance</span>
       </div>
@@ -559,8 +563,8 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
     <div class="tab-pane" id="tab-e33"><div class="tab-inner">
       <div class="eval-hdr">
         <div class="eval-sel-wrap">
-          <select id="selE33" onchange="selectStudent(this.value,'e33')"></select>
-          <div class="nav-arrows"><button onclick="navStudent(-1,'e33')">◀</button><button onclick="navStudent(1,'e33')">▶</button></div>
+          <select id="selE33" onchange="selectStudent(this.value,'e33')" aria-label="Sélection élève E33"></select>
+          <div class="nav-arrows"><button onclick="navStudent(-1,'e33')" aria-label="Élève précédent">◀</button><button onclick="navStudent(1,'e33')" aria-label="Élève suivant">▶</button></div>
         </div>
         <span class="badge" style="background:var(--violet);color:#fff">E33 — Dossier & Communication</span>
       </div>
@@ -598,11 +602,11 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
         <div class="card" style="margin-bottom:.75rem">
           <div style="font-weight:800;color:var(--bleu);margin-bottom:.5rem">📝 Informations de la session</div>
           <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
-            <input id="tpTitre" type="text" placeholder="Nom (ex: Brasage atelier S12)" style="flex:2;min-width:200px;padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:8px;font-size:.85rem">
-            <input id="tpDate" type="date" style="padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:8px;font-size:.85rem">
+            <input id="tpTitre" type="text" aria-label="Titre de la session" placeholder="Nom (ex: Brasage atelier S12)" style="flex:2;min-width:200px;padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:8px;font-size:.85rem">
+            <input id="tpDate" type="date" aria-label="Date de la session" style="padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:8px;font-size:.85rem">
           </div>
           <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-            <select id="tpType" style="padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:8px;font-size:.82rem">
+            <select id="tpType" aria-label="Type de session" style="padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:8px;font-size:.82rem">
               <option value="TP">TP</option>
               <option value="TD">TD</option>
               <option value="cours">Cours</option>
@@ -610,7 +614,7 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
               <option value="eval">Évaluation</option>
               <option value="autre">Autre</option>
             </select>
-            <select id="tpProf" style="padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:8px;font-size:.82rem">
+            <select id="tpProf" aria-label="Professeur" style="padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:8px;font-size:.82rem">
               <option value="">Prof : moi</option>
             </select>
           </div>
@@ -678,8 +682,8 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
       <div class="act-panel" id="ap-e31">
         <div class="eval-hdr">
           <div class="eval-sel-wrap">
-            <select id="selE31b" onchange="selectStudent(this.value,'e31');renderE31()"></select>
-            <div class="nav-arrows"><button onclick="navStudent(-1,'e31')">◀</button><button onclick="navStudent(1,'e31')">▶</button></div>
+            <select id="selE31b" onchange="selectStudent(this.value,'e31');renderE31()" aria-label="Sélection élève E31"></select>
+            <div class="nav-arrows"><button onclick="navStudent(-1,'e31')" aria-label="Élève précédent">◀</button><button onclick="navStudent(1,'e31')" aria-label="Élève suivant">▶</button></div>
           </div>
           <span class="badge b-e31">E31 — Réalisation & MeS</span>
         </div>
@@ -695,8 +699,8 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
       <div class="act-panel" id="ap-e32">
         <div class="eval-hdr">
           <div class="eval-sel-wrap">
-            <select id="selE32b" onchange="selectStudent(this.value,'e32');renderE32()"></select>
-            <div class="nav-arrows"><button onclick="navStudent(-1,'e32')">◀</button><button onclick="navStudent(1,'e32')">▶</button></div>
+            <select id="selE32b" onchange="selectStudent(this.value,'e32');renderE32()" aria-label="Sélection élève E32"></select>
+            <div class="nav-arrows"><button onclick="navStudent(-1,'e32')" aria-label="Élève précédent">◀</button><button onclick="navStudent(1,'e32')" aria-label="Élève suivant">▶</button></div>
           </div>
           <span class="badge b-e32">E32 — Diagnostic & Maintenance & MeS</span>
         </div>
@@ -714,12 +718,12 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
         <span style="font-weight:800;color:var(--bleu);font-size:.9rem">📅 Progression — Calendrier des activités</span>
         <div style="display:flex;gap:.3rem;align-items:center">
-          <select id="progFilter" onchange="renderProgression()" style="padding:.3rem .5rem;border:2px solid var(--gris3);border-radius:8px;font-size:.8rem">
+          <select id="progFilter" aria-label="Filtrer la progression" onchange="renderProgression()" style="padding:.3rem .5rem;border:2px solid var(--gris3);border-radius:8px;font-size:.8rem">
             <option value="all">Toute la classe</option>
           </select>
-          <button class="btn btn-ghost btn-xs" onclick="progPrevMonth()">◀</button>
+          <button class="btn btn-ghost btn-xs" onclick="progPrevMonth()" aria-label="Mois précédent">◀</button>
           <span id="progMonthLabel" style="font-weight:700;font-size:.85rem;min-width:100px;text-align:center"></span>
-          <button class="btn btn-ghost btn-xs" onclick="progNextMonth()">▶</button>
+          <button class="btn btn-ghost btn-xs" onclick="progNextMonth()" aria-label="Mois suivant">▶</button>
         </div>
       </div>
       <div id="progCalendar" style="margin-bottom:1rem"></div>
@@ -749,7 +753,7 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
           </div>
         </div>
         <div class="fr" style="margin-bottom:.75rem">
-          <select id="selTuteurEleve" onchange="afficherEvalTuteur(this.value)" style="padding:.5rem .75rem;border:2px solid var(--gris3);border-radius:var(--r2);font-weight:700;font-size:.85rem;">
+          <select id="selTuteurEleve" aria-label="Sélection élève éval tuteur" onchange="afficherEvalTuteur(this.value)" style="padding:.5rem .75rem;border:2px solid var(--gris3);border-radius:var(--r2);font-weight:700;font-size:.85rem;">
             <option value="">— Choisir un élève —</option>
           </select>
         </div>
@@ -827,8 +831,8 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
     <div class="tab-pane" id="tab-bilan"><div class="tab-inner">
       <div class="eval-hdr" style="margin-bottom:.75rem;">
         <div class="eval-sel-wrap">
-          <select id="selBilan" onchange="selectStudent(this.value,'bilan')"></select>
-          <div class="nav-arrows"><button onclick="navStudent(-1,'bilan')">◀</button><button onclick="navStudent(1,'bilan')">▶</button></div>
+          <select id="selBilan" onchange="selectStudent(this.value,'bilan')" aria-label="Sélection élève bilan"></select>
+          <div class="nav-arrows"><button onclick="navStudent(-1,'bilan')" aria-label="Élève précédent">◀</button><button onclick="navStudent(1,'bilan')" aria-label="Élève suivant">▶</button></div>
         </div>
         <div style="display:flex;gap:.3rem;">
           <button id="btnFormatif" class="btn btn-primary btn-sm" onclick="setPhase('formatif')">📘 Formatif</button>
@@ -846,10 +850,10 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
     <div class="tab-pane" id="tab-rapport"><div class="tab-inner">
       <div class="eval-hdr" style="margin-bottom:.75rem;">
         <div class="eval-sel-wrap">
-          <select id="selRapport" onchange="selectStudent(this.value,'rapport')"></select>
-          <div class="nav-arrows"><button onclick="navStudent(-1,'rapport')">◀</button><button onclick="navStudent(1,'rapport')">▶</button></div>
+          <select id="selRapport" onchange="selectStudent(this.value,'rapport')" aria-label="Sélection élève rapport"></select>
+          <div class="nav-arrows"><button onclick="navStudent(-1,'rapport')" aria-label="Élève précédent">◀</button><button onclick="navStudent(1,'rapport')" aria-label="Élève suivant">▶</button></div>
         </div>
-        <select id="selRapportPfmp" style="padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:var(--r2);font-weight:700;font-size:.78rem">
+        <select id="selRapportPfmp" aria-label="Sélection période PFMP" style="padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:var(--r2);font-weight:700;font-size:.78rem">
           <option value="pfmp1">PFMP 1</option>
           <option value="pfmp2">PFMP 2</option>
         </select>
@@ -979,7 +983,7 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
 
 </div>
 
-<div class="modal-ov" id="modalOv" onclick="if(event.target===this)closeModal()">
+<div class="modal-ov" id="modalOv" aria-expanded="false" onclick="if(event.target===this)closeModal()">
   <div class="modal-box"><div class="modal-title" id="modalTitle"></div><div id="modalBody"></div><div class="modal-act" id="modalAct"></div></div>
 </div>
 <div class="spin-ov" id="spinOv"><div class="spinner"></div></div>
@@ -1273,13 +1277,42 @@ const DROITS_LABELS={
 };
 const CLASSES_DEFAUT=['CAP IFCA 1','CAP IFCA 2','2nde TNE','1ère MFER','Term MFER'];
 
-/* ═══ [B] ÉTAT GLOBAL ═══ */
-let cfg={},appCfg={};
-let students=[],validations={},notes={},pfmpData={},partenaires=[],customCriteria={},compLocks={},sharedDocs=[];
-let users=[],classes=[],adminJournal=[];
-window.users=users;
-let cur=null,curCtx='atelier',curSit='A',curPhase='formatif';
-let online=false,demoMode=false,isAdmin=false,currentUser=null;
+/* ═══ [B] ÉTAT GLOBAL (appState namespace) ═══ */
+window.appState = {
+  data:    { students:[], validations:{}, notes:{}, pfmpData:{}, partenaires:[], customCriteria:{}, compLocks:{}, sharedDocs:[] },
+  config:  { cfg:{}, appCfg:{} },
+  admin:   { users:[], classes:[], adminJournal:[] },
+  ui:      { cur:null, curCtx:'atelier', curSit:'A', curPhase:'formatif' },
+  session: { online:false, demoMode:false, isAdmin:false, currentUser:null }
+};
+
+/* Alias rétro-compatibles (getters/setters bidirectionnels) */
+// — data —
+Object.defineProperty(window,'students',    {get(){return appState.data.students;},      set(v){appState.data.students=v;},      configurable:true});
+Object.defineProperty(window,'validations', {get(){return appState.data.validations;},   set(v){appState.data.validations=v;},   configurable:true});
+Object.defineProperty(window,'notes',       {get(){return appState.data.notes;},         set(v){appState.data.notes=v;},         configurable:true});
+Object.defineProperty(window,'pfmpData',    {get(){return appState.data.pfmpData;},      set(v){appState.data.pfmpData=v;},      configurable:true});
+Object.defineProperty(window,'partenaires', {get(){return appState.data.partenaires;},   set(v){appState.data.partenaires=v;},   configurable:true});
+Object.defineProperty(window,'customCriteria',{get(){return appState.data.customCriteria;},set(v){appState.data.customCriteria=v;},configurable:true});
+Object.defineProperty(window,'compLocks',   {get(){return appState.data.compLocks;},     set(v){appState.data.compLocks=v;},     configurable:true});
+Object.defineProperty(window,'sharedDocs',  {get(){return appState.data.sharedDocs;},    set(v){appState.data.sharedDocs=v;},    configurable:true});
+// — config —
+Object.defineProperty(window,'cfg',    {get(){return appState.config.cfg;},    set(v){appState.config.cfg=v;},    configurable:true});
+Object.defineProperty(window,'appCfg', {get(){return appState.config.appCfg;}, set(v){appState.config.appCfg=v;}, configurable:true});
+// — admin —
+Object.defineProperty(window,'users',        {get(){return appState.admin.users;},        set(v){appState.admin.users=v;},        configurable:true});
+Object.defineProperty(window,'classes',      {get(){return appState.admin.classes;},      set(v){appState.admin.classes=v;},      configurable:true});
+Object.defineProperty(window,'adminJournal', {get(){return appState.admin.adminJournal;}, set(v){appState.admin.adminJournal=v;}, configurable:true});
+// — ui —
+Object.defineProperty(window,'cur',      {get(){return appState.ui.cur;},      set(v){appState.ui.cur=v;},      configurable:true});
+Object.defineProperty(window,'curCtx',   {get(){return appState.ui.curCtx;},   set(v){appState.ui.curCtx=v;},   configurable:true});
+Object.defineProperty(window,'curSit',   {get(){return appState.ui.curSit;},   set(v){appState.ui.curSit=v;},   configurable:true});
+Object.defineProperty(window,'curPhase', {get(){return appState.ui.curPhase;}, set(v){appState.ui.curPhase=v;}, configurable:true});
+// — session —
+Object.defineProperty(window,'online',      {get(){return appState.session.online;},      set(v){appState.session.online=v;},      configurable:true});
+Object.defineProperty(window,'demoMode',    {get(){return appState.session.demoMode;},    set(v){appState.session.demoMode=v;},    configurable:true});
+Object.defineProperty(window,'isAdmin',     {get(){return appState.session.isAdmin;},     set(v){appState.session.isAdmin=v;},     configurable:true});
+Object.defineProperty(window,'currentUser', {get(){return appState.session.currentUser;}, set(v){appState.session.currentUser=v;}, configurable:true});
 
 /* Exposer les données globales pour les modules js/ externes */
 window.COMP_EP2=COMP_EP2;window.COMP_EP3=COMP_EP3;window.COMP_E2=COMP_E2;window.COMP_E31=COMP_E31;window.COMP_E32=COMP_E32;window.COMP_E33=COMP_E33;window.COMP_PFMP=COMP_PFMP;window.COMP_TNE=COMP_TNE;
@@ -1287,6 +1320,7 @@ window.CRIT_EP2=CRIT_EP2;window.CRIT_EP3=CRIT_EP3;window.CRIT_E2=CRIT_E2;window.
 window.SIT_EP3_INFO=SIT_EP3_INFO;window.SIT_INFO=SIT_INFO;window.SIT_E33_INFO=SIT_E33_INFO;window.NV=NV;window.NV_PCT=NV_PCT;window.NV_LBL=NV_LBL;
 window.FILIERES=FILIERES;window.getFiliere=getFiliere;window.getEpreuves=getEpreuves;window.getComps=getComps;window.getCrits=getCrits;window.getSits=getSits;
 const SK='inerweb-tt-fe-v1',SCFG='inerweb-tt-fe-cfg',SPART='inerweb-tt-fe-parts',SUSERS='inerweb-tt-fe-users',SCLASSES='inerweb-tt-fe-classes',SJOURNAL='inerweb-tt-fe-journal';
+window.SK=SK;window.SCFG=SCFG;window.SPART=SPART;window.SUSERS=SUSERS;window.SCLASSES=SCLASSES;window.SJOURNAL=SJOURNAL;
 const DB_NAME='inerwebtt-fe-db',DB_VERSION=3;
 let db=null,backupInterval=null;
 
@@ -2485,41 +2519,7 @@ function downloadGuideTuteur(){
   window.open(`aide_tuteur.html?tel=${tel}&email=${email}&etab=${etab}`,'_blank');
   toast('Guide ouvert — utilisez Ctrl+P pour imprimer en PDF','inf');
 }
-function renderParts(){
-  const c=document.getElementById('partList');
-  if(!partenaires.length){c.innerHTML='<div class="empty"><div class="ei">🏢</div><p>Aucun partenaire</p></div>';return;}
-  c.innerHTML=partenaires.map((p,i)=>`
-  <div class="part-card">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start">
-      <div>
-        <div class="part-nom">${esc(p.nom)}</div>
-        <div class="part-sub">👤 ${esc(p.tuteur||'—')} ${p.fonction?'· '+esc(p.fonction):''}</div>
-        ${p.tel?`<div class="part-sub">📱 ${esc(p.tel)}</div>`:''}
-        ${p.email?`<div class="part-sub">✉️ ${esc(p.email)}</div>`:''}
-        <div class="stars">${'★'.repeat(p.etoiles||0)}${'☆'.repeat(5-(p.etoiles||0))}</div>
-      </div>
-      <div style="display:flex;gap:.25rem">
-        <button class="btn btn-rouge btn-xs" onclick="delPart(${i})">🗑️</button>
-      </div>
-    </div>
-    ${p.notes?`<div style="font-size:.72rem;color:var(--gris);margin-top:.4rem;font-style:italic">${esc(p.notes)}</div>`:''}
-  </div>`).join('');
-}
-function showAddPart(){
-  showModal('🏢 Nouveau partenaire',`
-    <div class="fr"><label>Nom entreprise</label><input id="pNom" placeholder="Climafroid SARL"></div>
-    <div class="grid2" style="margin-top:.5rem"><div class="fr"><label>Tuteur</label><input id="pTut" placeholder="Jean Martin"></div><div class="fr"><label>Fonction</label><input id="pFonc" placeholder="Chef d'atelier"></div></div>
-    <div class="grid2" style="margin-top:.5rem"><div class="fr"><label>Téléphone</label><input id="pTel" type="tel"></div><div class="fr"><label>Email</label><input id="pEmail" type="email"></div></div>
-    <div class="fr" style="margin-top:.5rem"><label>Qualité (étoiles 1-5)</label><input id="pEto" type="number" min="1" max="5" value="3"></div>
-    <div class="fr" style="margin-top:.5rem"><label>Notes internes</label><textarea id="pNotes" rows="2" style="width:100%;padding:.5rem;border:2px solid var(--gris3);border-radius:var(--r2);"></textarea></div>`,
-    `<button class="btn btn-teal" onclick="addPart()">➕ Ajouter</button><button class="btn btn-ghost" onclick="closeModal()">Annuler</button>`);
-}
-function addPart(){
-  partenaires.push({nom:document.getElementById('pNom').value.trim(),tuteur:document.getElementById('pTut').value.trim(),fonction:document.getElementById('pFonc').value.trim(),tel:document.getElementById('pTel').value.trim(),email:document.getElementById('pEmail').value.trim(),etoiles:parseInt(document.getElementById('pEto').value)||3,notes:document.getElementById('pNotes').value.trim()});
-  localStorage.setItem(SPART,JSON.stringify(partenaires));
-  closeModal();renderParts();toast('Partenaire ajouté','ok');
-}
-function delPart(i){partenaires.splice(i,1);localStorage.setItem(SPART,JSON.stringify(partenaires));renderParts();toast('Supprimé','inf');}
+/* Partenaires → js/partenaires.js */
 const MSG_TPL={
   bienvenue:`Bonjour,\nJe suis l'enseignant(e) référent(e) de votre stagiaire.\nL'évaluation se fait via ce lien : [lien tuteur]\nCordialement,`,
   rappel:`Bonjour,\nUne évaluation des compétences est en attente.\nVotre lien : [lien tuteur]\nMerci,`,
@@ -2747,112 +2747,7 @@ function sauverRapport(){
 }
 
 /* ═══ [H-ter] DOCUMENTS PARTAGÉS — DRIVE CLASSE ═══ */
-const DOC_CAT_LABELS={convention:'📋 Convention',  'rapport-type':'📝 Rapport type', support:'📊 Support', guide:'📖 Guide', autre:'📎 Autre'};
-const DOC_VIS_LABELS={tous:'Élèves + Tuteurs', eleves:'Élèves', tuteurs:'Tuteurs', profs:'Profs'};
-const DOC_VIS_COLORS={tous:'var(--teal)', eleves:'var(--violet)', tuteurs:'var(--bleu2)', profs:'var(--orange)'};
-
-function toggleDocEleve(){
-  const vis=document.getElementById('docVisibilite').value;
-  const wrap=document.getElementById('docEleveWrap');
-  wrap.style.display=vis==='profs'?'':'none';
-  if(vis==='profs'){
-    const sel=document.getElementById('docEleveCode');
-    sel.innerHTML='<option value="">— Aucun (document global) —</option>'+students.map(s=>`<option value="${esc(s.code)}">${esc(s.nom)} ${esc(s.prenom||'')}</option>`).join('');
-  }
-}
-function docFileSelected(input){
-  const info=document.getElementById('docFileInfo');
-  if(input.files.length){
-    const f=input.files[0];
-    const sz=f.size<1024*1024?(Math.round(f.size/1024)+'Ko'):(Math.round(f.size/1024/1024*10)/10+'Mo');
-    info.innerHTML=`<strong>${esc(f.name)}</strong> — ${sz}`;
-  }else{info.innerHTML='';}
-}
-
-function ajouterDocument(){
-  const input=document.getElementById('docFichier');
-  if(!input.files.length){toast('Sélectionnez un fichier','err');return;}
-  const f=input.files[0];
-  if(f.size>10*1024*1024){toast('Fichier trop volumineux (max 10 Mo)','err');return;}
-  const cat=document.getElementById('docCategorie').value;
-  const vis=document.getElementById('docVisibilite').value;
-  const nom=document.getElementById('docNom').value.trim()||f.name;
-  const eleveCode=(vis==='profs'?document.getElementById('docEleveCode')?.value:'')||'';
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const doc={
-      id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
-      nom,
-      filename:f.name,
-      categorie:cat,
-      visibilite:vis,
-      eleveCode:eleveCode,
-      type:f.type,
-      taille:f.size,
-      dataUrl:e.target.result,
-      date:new Date().toISOString(),
-      auteur:cfg.nomProf||'Prof'
-    };
-    sharedDocs.push(doc);
-    saveLocal();
-    renderSharedDocs();
-    toast('Document ajouté au drive','ok');
-    // Reset
-    input.value='';
-    document.getElementById('docNom').value='';
-    document.getElementById('docFileInfo').innerHTML='';
-  };
-  reader.readAsDataURL(f);
-}
-
-function supprimerDoc(id){
-  if(!confirm('Supprimer ce document du drive ?'))return;
-  sharedDocs=sharedDocs.filter(d=>d.id!==id);
-  saveLocal();renderSharedDocs();toast('Document supprimé','warn');
-}
-
-function telechargerDoc(id){
-  const doc=sharedDocs.find(d=>d.id===id);
-  if(!doc)return;
-  const a=document.createElement('a');
-  a.href=doc.dataUrl;
-  a.download=doc.filename||doc.nom;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-}
-
-function renderSharedDocs(){
-  const c=document.getElementById('sharedDocsList');
-  if(!c)return;
-  if(!sharedDocs.length){
-    c.innerHTML='<div class="empty"><div class="ei">📁</div><p>Aucun document partagé</p><p style="font-size:.75rem;color:var(--gris)">Ajoutez des conventions, rapports types, guides...</p></div>';
-    return;
-  }
-  // Grouper par catégorie
-  const byCat={};
-  sharedDocs.forEach(d=>{if(!byCat[d.categorie])byCat[d.categorie]=[];byCat[d.categorie].push(d);});
-  const extIcons={pdf:'📕',doc:'📘',docx:'📘',ppt:'📙',pptx:'📙',xls:'📗',xlsx:'📗',odt:'📘',odp:'📙',ods:'📗',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',txt:'📄'};
-  c.innerHTML=Object.keys(byCat).map(cat=>{
-    const docs=byCat[cat];
-    return `<div class="card" style="border-left:3px solid ${DOC_VIS_COLORS[docs[0].visibilite]||'var(--gris)'}">
-      <div class="card-title">${DOC_CAT_LABELS[cat]||cat} <span class="badge" style="background:var(--gris2);font-size:.65rem">${docs.length}</span></div>
-      ${docs.map(d=>{
-        const ext=(d.filename||d.nom).split('.').pop().toLowerCase();
-        const ico=extIcons[ext]||'📄';
-        const sz=d.taille<1024*1024?(Math.round(d.taille/1024)+'Ko'):(Math.round(d.taille/1024/1024*10)/10+'Mo');
-        const dt=new Date(d.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
-        return `<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem .6rem;background:var(--gris2);border-radius:var(--r2);margin-bottom:.35rem">
-          <span style="font-size:1.3rem">${ico}</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(d.nom)}</div>
-            <div style="font-size:.68rem;color:var(--gris)">${sz} · ${dt} · <span style="color:${DOC_VIS_COLORS[d.visibilite]||'var(--gris)'};font-weight:700">${DOC_VIS_LABELS[d.visibilite]||esc(d.visibilite)}</span>${d.eleveCode?` · 👤 ${esc((students.find(s=>s.code===d.eleveCode)||{}).nom||d.eleveCode)}`:''}</div>
-          </div>
-          <button class="btn btn-ghost btn-xs" onclick="telechargerDoc('${d.id}')" title="Télécharger">⬇️</button>
-          <button class="btn btn-rouge btn-xs" onclick="supprimerDoc('${d.id}')" title="Supprimer">🗑️</button>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }).join('');
-}
+/* Documents partagés → js/documents.js */
 
 function renderBilan(){
   const c=document.getElementById('bilanContent');
@@ -3535,74 +3430,7 @@ async function exportAllPDF(){
   cur=orig;hideSpinner();
   toast(`${ok} PDF générés${err?' · '+err+' erreur(s)':''}`,err?'warn':'ok');
 }
-function exportExcel(){
-  const rows=[['Code','Nom','Prénom','Classe','Note E31 (validées)','Note E31 clôturée','Note E32 (validées)','Note E32 clôturée','Note E33 (validées)','Note E33 clôturée','E31 clôturé','E32 clôturé','E33 clôturé']];
-  students.forEach(s=>{
-    const e2=calcNote(s.code,'E31'),e3=calcNote(s.code,'E32'),e33=calcNote(s.code,'E33'),
-          n2=notes[s.code]?.E31||{},n3=notes[s.code]?.E32||{},n33=notes[s.code]?.E33||{};
-    rows.push([s.code,s.nom,s.prenom||'',s.classe||'',e2.note,n2.note_finale||'',e3.note,n3.note_finale||'',e33.note,n33.note_finale||'',n2.cloture?'Oui':'Non',n3.cloture?'Oui':'Non',n33.cloture?'Oui':'Non']);
-  });
-  const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'CCF');XLSX.writeFile(wb,`CCF_Recap_${appCfg.session||2026}.xlsx`);
-  toast('Excel généré','ok');
-}
-function exportBackup(){
-  const data={version:'TT-4.0',timestamp:new Date().toISOString(),cfg:appCfg,students,validations,notes,pfmpData,sharedDocs};
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
-  a.download=`inerweb_backup_${new Date().toISOString().slice(0,10)}.json`;a.click();
-  toast('Backup JSON exporté','ok');
-}
-function handleRestore(file){
-  if(!file)return;
-  const r=new FileReader();
-  r.onload=e=>{try{
-    const d=JSON.parse(e.target.result);
-    if(d.config&&!d.version){migrateV10(d);toast('Données v10 migrées','ok');return;}
-    if(d.students)students=d.students;if(d.validations)validations=d.validations;
-    if(d.notes)notes=d.notes;if(d.pfmpData)pfmpData=d.pfmpData;if(d.cfg)appCfg=d.cfg;
-    if(d.sharedDocs)sharedDocs=d.sharedDocs;
-    saveLocal();updateAll();toast(`Backup ${d.version||''} restauré`,'ok');
-  }catch{toast('Fichier invalide','err');}};
-  r.readAsText(file);
-}
-function migrateV10(d){
-  // Migration des élèves
-  if(d.students)students=d.students.map(s=>({
-    code:s.id||('ELV-'+Math.random().toString(36).substring(2,6).toUpperCase()),
-    nom:s.nom||'',prenom:s.prenom||'',classe:s.classe||'CAP IFCA 1',
-    statut:'actif',referentiel:getFiliere({classe:s.classe||'CAP IFCA 1'}),
-    token_eleve:Math.random().toString(36).substring(2,10).toUpperCase(),
-    token_tuteur:Math.random().toString(36).substring(2,10).toUpperCase(),
-  }));
-  // Migration des validations v10
-  if(d.evaluations||d.validations){
-    const src=d.evaluations||d.validations;
-    Object.entries(src).forEach(([code,vals])=>{
-      validations[code]=(Array.isArray(vals)?vals:[]).map(v=>({
-        epreuve:   v.epreuve||'E31',
-        competence:v.competence||v.comp||'',
-        critere:   v.critere||'',
-        niveau:    v.niveau||v.level||'NE',
-        contexte:  v.contexte||v.ctx||'atelier',
-        phase:     v.phase||'formatif',
-        evaluateur:v.evaluateur||'Migration v10',
-        timestamp: v.timestamp||new Date().toISOString(),
-      }));
-    });
-  }
-  // Migration des notes v10
-  if(d.notes){
-    Object.entries(d.notes).forEach(([code,n])=>{
-      notes[code]={
-        E31:{note_finale:n.E31?.note_finale??null,cloture:n.E31?.cloture??false},
-        E32:{note_finale:n.E32?.note_finale??null,cloture:n.E32?.cloture??false},
-      };
-    });
-  }
-  saveLocal();updateAll();
-  toast(`Migration v10 : ${students.length} élève(s), ${Object.keys(validations).length} dossier(s)`,'ok');
-}
+/* Export (Excel, Backup, Restore, Migration v10) → js/export-mod.js */
 function handleFusion(file){
   if(!file)return;
   const r=new FileReader();
@@ -3628,41 +3456,7 @@ function handleFusion(file){
   }catch{toast('Fichier fusion invalide','err');}};
   r.readAsText(file);
 }
-function renderJournal(){
-  const c=document.getElementById('journalGlobal');
-  const all=[];
-  Object.entries(validations).forEach(([code,vals])=>{
-    const s=students.find(x=>x.code===code);
-    (Array.isArray(vals)?vals:[]).forEach(v=>{if(v.epreuve&&v.competence&&v.niveau&&v.timestamp)all.push({...v,eNom:s?`${s.nom} ${s.prenom||''}`:code});});
-  });
-  all.sort((a,b)=>String(b.timestamp||'').localeCompare(String(a.timestamp||'')));
-  c.innerHTML=all.slice(0,50).map(j=>`<div class="jentry ${esc(j.phase||'')}"><span class="j-date">${dateFR(j.timestamp)}</span> · <strong style="color:var(--bleu2)">${esc(j.eNom)}</strong> · ${esc(j.epreuve)} ${esc(j.competence)} → <strong>${esc(j.niveau)}</strong></div>`).join('')||'<div class="alert al-info">Aucune action</div>';
-}
-async function renderBackupList(){
-  const c=document.getElementById('backupList');
-  if(!c)return;
-  const bks=await getBackups();
-  if(!bks.length){c.innerHTML='<div class="alert al-info">Aucun backup disponible</div>';return;}
-  c.innerHTML=bks.slice(0,20).map(b=>{
-    const d=new Date(b.timestamp);
-    const dateStr=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
-    const timeStr=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    const nbEleves=b.students?.length||0;
-    const nbVals=Object.values(b.validations||{}).reduce((a,v)=>a+(Array.isArray(v)?v.length:0),0);
-    return `<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem;background:var(--gris2);border-radius:var(--r2);margin-bottom:.3rem;${b.auto?'':'border-left:3px solid var(--bleu)'}">
-      <div style="flex:1">
-        <div style="font-size:.8rem;font-weight:700">${dateStr} à ${timeStr} ${b.auto?'<span style="font-size:.65rem;color:var(--gris)">(auto)</span>':'<span style="font-size:.65rem;color:var(--bleu)">(manuel)</span>'}</div>
-        <div style="font-size:.7rem;color:var(--gris)">${nbEleves} élève(s) · ${nbVals} éval(s)</div>
-      </div>
-      <button class="btn btn-vert btn-xs" onclick="restoreBackup(${b.id})">♻️</button>
-      <button class="btn btn-rouge btn-xs" onclick="deleteBackup(${b.id})">🗑️</button>
-    </div>`;
-  }).join('');
-}
-function confirmPurge(){
-  showModal('🗑️ Purger',`<div class="alert al-danger">⚠️ Efface TOUTES les données locales. Le cloud n'est pas affecté.</div>`,
-    `<button class="btn btn-rouge" onclick="localStorage.removeItem('${SK}');closeModal();location.reload()">Oui, tout effacer</button><button class="btn btn-ghost" onclick="closeModal()">Annuler</button>`);
-}
+/* Journal, Backups, Purge → js/journal-mod.js */
 
 /* ═══ [K] CONFIG APP ═══ */
 function showParamModal(){
@@ -3827,8 +3621,8 @@ function loadDemoData(){
 /* ═══ [L] UTILITAIRES ═══ */
 /** Échappe les caractères HTML pour éviter les injections XSS */
 function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function showModal(t,b,a){document.getElementById('modalTitle').textContent=t;document.getElementById('modalBody').innerHTML=b;document.getElementById('modalAct').innerHTML=a||'';document.getElementById('modalOv').classList.add('open');}
-function closeModal(){document.getElementById('modalOv').classList.remove('open');}
+function showModal(t,b,a){document.getElementById('modalTitle').textContent=t;document.getElementById('modalBody').innerHTML=b;document.getElementById('modalAct').innerHTML=a||'';var m=document.getElementById('modalOv');m.classList.add('open');m.setAttribute('aria-expanded','true');}
+function closeModal(){var m=document.getElementById('modalOv');m.classList.remove('open');m.setAttribute('aria-expanded','false');}
 function showSpinner(){document.getElementById('spinOv').classList.add('open');}
 function hideSpinner(){document.getElementById('spinOv').classList.remove('open');}
 function toast(msg,type='inf'){
@@ -4353,74 +4147,7 @@ function handleDeepLink(){
   setTimeout(tryNav,600);
 }
 
-function showScanner(){
-  showModal('📷 Scanner un badge élève',`
-    <div style="text-align:center;margin-bottom:.75rem">
-      <video id="scanVid" style="width:100%;max-width:320px;border-radius:var(--r);background:#000" autoplay playsinline></video>
-      <canvas id="scanCanvas" style="display:none"></canvas>
-    </div>
-    <div id="scanStatus" class="alert al-info" style="text-align:center;font-size:.8rem">Pointez la caméra vers le QR code</div>`,
-    `<button class="btn btn-ghost" onclick="stopScanner();closeModal()">✖ Fermer</button>`
-  );
-  startScanner();
-}
-
-let _scanStream=null,_scanTimer=null;
-
-async function startScanner(){
-  try{
-    _scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    const vid=document.getElementById('scanVid');
-    if(!vid){stopScanner();return;}
-    vid.srcObject=_scanStream;
-    await vid.play();
-    _scanTimer=setInterval(()=>scanFrame(),300);
-  }catch(e){
-    const st=document.getElementById('scanStatus');
-    if(st)st.innerHTML='<span style="color:var(--rouge)">⚠️ Caméra non disponible — '+esc(e.message)+'</span>';
-  }
-}
-
-function scanFrame(){
-  const vid=document.getElementById('scanVid');
-  const cvs=document.getElementById('scanCanvas');
-  if(!vid||!cvs||vid.readyState<2)return;
-  cvs.width=vid.videoWidth;cvs.height=vid.videoHeight;
-  const ctx=cvs.getContext('2d');
-  ctx.drawImage(vid,0,0);
-  try{
-    const img=ctx.getImageData(0,0,cvs.width,cvs.height);
-    // BarcodeDetector API (Chrome/Edge moderne)
-    if('BarcodeDetector' in window){
-      new BarcodeDetector({formats:['qr_code']}).detect(cvs).then(codes=>{
-        if(codes.length>0)handleQRResult(codes[0].rawValue);
-      }).catch(()=>{});
-    }
-  }catch{}
-}
-
-function handleQRResult(url){
-  stopScanner();closeModal();
-  try{
-    const u=new URL(url);
-    const eleve=u.searchParams.get('eleve');
-    const mode=u.searchParams.get('mode')||'e31';
-    if(eleve){
-      cur=eleve;
-      const tab=mode==='e32'?'e32':mode==='bilan'?'bilan':'e31';
-      switchTab(tab);
-      const s=students.find(x=>x.code===eleve);
-      toast(`📱 ${s?s.nom+' '+(s.prenom||''):eleve} chargé`,'ok');
-    } else {
-      toast('QR non reconnu','warn');
-    }
-  }catch{toast('QR invalide','err');}
-}
-
-function stopScanner(){
-  if(_scanTimer){clearInterval(_scanTimer);_scanTimer=null;}
-  if(_scanStream){_scanStream.getTracks().forEach(t=>t.stop());_scanStream=null;}
-}
+/* Scanner QR → js/scanner.js */
 
 document.addEventListener('DOMContentLoaded',()=>{
   const hasConfig=loadConfig();

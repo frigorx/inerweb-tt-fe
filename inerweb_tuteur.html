@@ -238,9 +238,13 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
 .modal-box p{font-size:.85rem;color:var(--gris);margin-bottom:1.25rem;line-height:1.5;}
 .modal-btns{display:flex;gap:.5rem;}
 .modal-btns .btn{flex:1;}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+.skip-link{position:absolute;top:-40px;left:0;background:var(--bleu);color:#fff;padding:8px 16px;z-index:10000;font-size:14px;transition:top .2s;}
+.skip-link:focus{top:0;}
 </style>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Aller au contenu principal</a>
 
 <header class="app-header">
   <div class="hdr-logo">
@@ -258,7 +262,8 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
 </header>
 
 <!-- ═══ PAGE 0 : BIENVENUE ═══ -->
-<div class="page active" id="page-bienvenue">
+<div class="page active" id="page-bienvenue" role="main">
+  <div id="main-content"></div>
   <div class="page-inner">
 
     <div class="hero">
@@ -542,7 +547,7 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
 <div class="spin-ov" id="spinOv"><div class="spinner"></div></div>
 
 <!-- ═══ MODALE CONFIRMATION ENVOI ═══ -->
-<div class="modal-ov" id="modalConfirm">
+<div class="modal-ov" id="modalConfirm" aria-expanded="false">
   <div class="modal-box">
     <h3>📤 Confirmer l'envoi</h3>
     <p id="modalMsg">Êtes-vous sûr de vouloir envoyer les évaluations ?</p>
@@ -687,11 +692,7 @@ let telsCount=1,emailsCount=1,tuteursCount=1;
 // Il s'authentifie avec son propre token_tuteur
 const API_URL='https://script.google.com/macros/s/AKfycbzEbzLo57x0u0k2wjAzyLdZ42iVZdHdOwmPd5Ioe6fjApuSftuSckZ9svKpajbyjEuhVg/exec';
 
-/* ═══ SÉCURITÉ : échappement HTML anti-XSS ═══ */
-function esc(s){
-  if(s==null)return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
+/* esc() → fourni par core.js */
 /** JSON.parse protégé — retourne fallback en cas d'erreur */
 function safeParse(str,fallback){
   try{return JSON.parse(str);}catch(e){console.warn('[tuteur] JSON.parse échoué :',e.message);return fallback;}
@@ -735,12 +736,12 @@ function telechargerDocTuteur(idx){
 /* ═══ MULTI-CHAMPS TÉLÉPHONES / EMAILS ═══ */
 function addTel(val=''){
   const d=document.createElement('div');d.className='multi-field';d.id='tel-'+telsCount;
-  d.innerHTML=`<input type="tel" placeholder="06 00 00 00 00" value="${esc(val)}" inputmode="tel"><button class="btn-del" onclick="this.parentElement.remove()">✕</button>`;
+  d.innerHTML=`<input type="tel" placeholder="06 00 00 00 00" value="${esc(val)}" inputmode="tel" aria-label="Téléphone"><button class="btn-del" onclick="this.parentElement.remove()" aria-label="Supprimer">✕</button>`;
   document.getElementById('telList').appendChild(d);telsCount++;
 }
 function addEmail(val=''){
   const d=document.createElement('div');d.className='multi-field';d.id='em-'+emailsCount;
-  d.innerHTML=`<input type="email" placeholder="contact@entreprise.fr" value="${esc(val)}"><button class="btn-del" onclick="this.parentElement.remove()">✕</button>`;
+  d.innerHTML=`<input type="email" placeholder="contact@entreprise.fr" value="${esc(val)}" aria-label="Email"><button class="btn-del" onclick="this.parentElement.remove()" aria-label="Supprimer">✕</button>`;
   document.getElementById('emailList').appendChild(d);emailsCount++;
 }
 
@@ -1079,11 +1080,11 @@ function setBehav(key,niveau){
 /* ═══ MODALE CONFIRMATION ═══ */
 function ouvrirModale(msg,onConfirm){
   document.getElementById('modalMsg').textContent=msg||'Êtes-vous sûr de vouloir envoyer les évaluations ?';
-  document.getElementById('modalConfirm').classList.add('open');
+  var mc=document.getElementById('modalConfirm');mc.classList.add('open');mc.setAttribute('aria-expanded','true');
   window._modalOnConfirm=onConfirm||null;
 }
 function fermerModale(){
-  document.getElementById('modalConfirm').classList.remove('open');
+  var mc=document.getElementById('modalConfirm');mc.classList.remove('open');mc.setAttribute('aria-expanded','false');
   window._modalOnConfirm=null;
 }
 function confirmerEnvoi(){

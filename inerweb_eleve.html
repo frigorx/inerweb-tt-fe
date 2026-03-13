@@ -211,9 +211,13 @@ input, select, textarea, button { font-family:inherit; }
 .copie-cachee { opacity:.5; cursor:not-allowed; }
 .copie-cachee:hover { background:var(--gris2); }
 .note-badge { display:inline-block; padding:.2rem .5rem; border-radius:var(--r2); font-size:.75rem; font-weight:800; }
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+.skip-link{position:absolute;top:-40px;left:0;background:var(--bleu);color:#fff;padding:8px 16px;z-index:10000;font-size:14px;transition:top .2s;}
+.skip-link:focus{top:0;}
 </style>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Aller au contenu principal</a>
 
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
@@ -236,13 +240,14 @@ input, select, textarea, button { font-family:inherit; }
     <div class="login-title">Espace <span>Élève</span></div>
     <div class="login-sub">Accède à ton espace personnel</div>
     <div class="login-error" id="loginError">Code invalide. Vérifie ton badge ou demande à ton prof.</div>
-    <input type="text" class="login-input" id="tokenInput" placeholder="Entre ton code élève" maxlength="20">
+    <input type="text" class="login-input" id="tokenInput" placeholder="Entre ton code élève" maxlength="20" aria-label="Code élève">
     <button class="login-btn" onclick="doLogin()">🚀 Accéder à mon espace</button>
     <div class="login-help">Tu n'as pas ton code ? <a href="#">Demande à ton professeur</a></div>
   </div>
 </div>
 
 <div class="app-container" id="appContainer">
+  <div id="main-content"></div>
   <header class="app-header">
     <div class="hdr-avatar" style="background:none;width:auto;height:auto">
       <svg xmlns="http://www.w3.org/2000/svg" width="100" height="28" viewBox="0 0 180 32" style="flex-shrink:0">
@@ -258,7 +263,7 @@ input, select, textarea, button { font-family:inherit; }
       <div class="hdr-name" id="hdrName">—</div>
       <div class="hdr-class" id="hdrClass">—</div>
     </div>
-    <button class="hdr-sync" id="btnSync" onclick="syncCloud()" title="Synchroniser">🔄</button>
+    <button class="hdr-sync" id="btnSync" onclick="syncCloud()" title="Synchroniser" aria-label="Synchroniser">🔄</button>
   </header>
 
   <div class="page active" id="page-home">
@@ -329,9 +334,9 @@ input, select, textarea, button { font-family:inherit; }
   <div class="page" id="page-calendrier">
     <div class="card" style="padding:.75rem">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <button class="btn btn-ghost" onclick="ecalNav(-1)" style="padding:.4rem .6rem">◀</button>
+        <button class="btn btn-ghost" onclick="ecalNav(-1)" style="padding:.4rem .6rem" aria-label="Mois précédent">◀</button>
         <span id="ecalLabel" style="font-weight:800;font-size:.9rem;color:var(--bleu)"></span>
-        <button class="btn btn-ghost" onclick="ecalNav(1)" style="padding:.4rem .6rem">▶</button>
+        <button class="btn btn-ghost" onclick="ecalNav(1)" style="padding:.4rem .6rem" aria-label="Mois suivant">▶</button>
       </div>
     </div>
     <div id="ecalGrid" class="ecal-grid"></div>
@@ -359,7 +364,7 @@ input, select, textarea, button { font-family:inherit; }
         <div class="upload-zone-ico">📁</div>
         <div class="upload-zone-txt"><strong>Clique</strong> pour choisir un fichier</div>
       </div>
-      <input type="file" id="eleveDocInput" class="upload-input" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.odt,.odp,.jpg,.jpeg,.png,.txt" onchange="ajouterDocEleve(this)">
+      <input type="file" id="eleveDocInput" class="upload-input" aria-label="Choisir un document" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.odt,.odp,.jpg,.jpeg,.png,.txt" onchange="ajouterDocEleve(this)">
       <div id="eleveDocsList"></div>
     </div>
   </div>
@@ -385,8 +390,8 @@ input, select, textarea, button { font-family:inherit; }
         <div class="upload-zone-ico">📷</div>
         <div class="upload-zone-txt"><strong>Clique</strong> ou glisse tes photos ici</div>
       </div>
-      <input type="file" id="cameraInput" class="upload-input" accept="image/*" capture="environment" onchange="handleFiles(this.files)">
-      <input type="file" id="uploadInput" class="upload-input" accept="image/*" multiple onchange="handleFiles(this.files)">
+      <input type="file" id="cameraInput" class="upload-input" aria-label="Prendre une photo" accept="image/*" capture="environment" onchange="handleFiles(this.files)">
+      <input type="file" id="uploadInput" class="upload-input" aria-label="Importer des photos" accept="image/*" multiple onchange="handleFiles(this.files)">
       <div class="upload-preview" id="uploadPreview"></div>
       <div class="form-group">
         <label>Type d'entrée</label>
@@ -415,8 +420,8 @@ input, select, textarea, button { font-family:inherit; }
   </nav>
 </div>
 
-<div class="photo-modal" id="photoModal" onclick="closePhotoModal()">
-  <button class="photo-modal-close" onclick="closePhotoModal()">✕</button>
+<div class="photo-modal" id="photoModal" aria-expanded="false" onclick="closePhotoModal()">
+  <button class="photo-modal-close" onclick="closePhotoModal()" aria-label="Fermer">✕</button>
   <img id="photoModalImg" src="" alt="Photo">
 </div>
 
@@ -446,8 +451,7 @@ let cfg={apiUrl:'',token:''};
 let eleve=null,journal=[],evals={},pendingPhotos=[],sharedDocs=[],eleveDocs=[],activites=[],eleveNotes={},copiesCachees=[];
 const SK='inerweb-tt-fe-eleve-v2',MAX_PHOTOS_DAY=10,MAX_PHOTO_SIZE=200*1024;
 
-/* ═══ SÉCURITÉ : échappement HTML anti-XSS ═══ */
-function esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+/* esc() → fourni par core.js */
 /** JSON.parse protégé — retourne fallback en cas d'erreur */
 function safeParse(str,fallback){try{return JSON.parse(str);}catch(e){console.warn('[eleve] JSON.parse échoué :',e.message);return fallback;}}
 
@@ -567,12 +571,12 @@ function renderJournalEntry(e){
   const pendingClass=e.synced?'':'pending';
   const pendingBadge=e.synced?'':'<span class="badge-pending">En attente</span>';
   const syncIcon=e.synced?'<span style="color:var(--vert);margin-left:.3rem">✓</span>':'<span style="color:var(--orange);margin-left:.3rem">⏳</span>';
-  const actionsHtml=e.synced?'':`<div class="journal-entry-actions"><button class="btn-edit-entry" onclick="editJournalEntry('${esc(e.id)}')">✏️ Modifier</button><button class="btn-del-entry" onclick="deleteJournalEntry('${esc(e.id)}')">🗑️ Supprimer</button></div>`;
+  const actionsHtml=e.synced?'':`<div class="journal-entry-actions"><button class="btn-edit-entry" onclick="editJournalEntry('${esc(e.id)}')" aria-label="Modifier l'entrée">✏️ Modifier</button><button class="btn-del-entry" onclick="deleteJournalEntry('${esc(e.id)}')" aria-label="Supprimer l'entrée">🗑️ Supprimer</button></div>`;
   return`<div class="journal-entry ${pendingClass}"><div class="journal-entry-time">${timeHM(e.date)}<span class="journal-entry-type">${TYPE_LBL[e.type]||esc(e.type)}</span>${syncIcon}${pendingBadge}</div>${e.text?`<div class="journal-entry-text">${esc(e.text)}</div>`:''}${photosHtml}${actionsHtml}</div>`;
 }
 
 function openPhoto(src){openPhotoModal(src);}
-function closePhotoModal(){document.getElementById('photoModal').classList.remove('active');}
+function closePhotoModal(){var m=document.getElementById('photoModal');m.classList.remove('active');m.setAttribute('aria-expanded','false');}
 
 function doLogin(){
   const token=document.getElementById('tokenInput').value.trim().toUpperCase();
@@ -824,9 +828,9 @@ function telechargerActDoc(actIdx,docIdx){
 function openPhotoModal(src){
   const m=document.getElementById('photoModal');
   document.getElementById('photoModalImg').src=src;
-  m.classList.add('active');
+  m.classList.add('active');m.setAttribute('aria-expanded','true');
 }
-function closePhotoModal(){document.getElementById('photoModal').classList.remove('active');}
+function closePhotoModal(){var m=document.getElementById('photoModal');m.classList.remove('active');m.setAttribute('aria-expanded','false');}
 
 /* ═══ DOCUMENTS ═══ */
 const DOC_CAT_ICO={convention:'📋','rapport-type':'📝',support:'📊',guide:'📖',autre:'📎',rapport:'📝'};
