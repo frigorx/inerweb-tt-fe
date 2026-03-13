@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>inerWeb TT — Mon espace élève</title>
+<title>INERWEB PROG+ — Mon espace élève</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -412,11 +412,11 @@ input, select, textarea, button { font-family:inherit; }
   </div>
 
   <nav class="bottom-nav" role="navigation" aria-label="Navigation principale">
-    <button class="nav-item active" data-page="home" onclick="switchPage('home')"><span class="nav-ico">🏠</span><span class="nav-lbl">Accueil</span></button>
-    <button class="nav-item" data-page="progress" onclick="switchPage('progress')"><span class="nav-ico">📊</span><span class="nav-lbl">Compétences</span></button>
-    <button class="nav-item" data-page="calendrier" onclick="switchPage('calendrier')"><span class="nav-ico">📅</span><span class="nav-lbl">Calendrier</span></button>
-    <button class="nav-item" data-page="docs" onclick="switchPage('docs')"><span class="nav-ico">📁</span><span class="nav-lbl">Documents</span></button>
-    <button class="nav-item" data-page="journal" onclick="switchPage('journal')"><span class="nav-ico">📓</span><span class="nav-lbl">Journal</span></button>
+    <button class="nav-item active" data-page="home"><span class="nav-ico">🏠</span><span class="nav-lbl">Accueil</span></button>
+    <button class="nav-item" data-page="progress"><span class="nav-ico">📊</span><span class="nav-lbl">Compétences</span></button>
+    <button class="nav-item" data-page="calendrier"><span class="nav-ico">📅</span><span class="nav-lbl">Calendrier</span></button>
+    <button class="nav-item" data-page="docs"><span class="nav-ico">📁</span><span class="nav-lbl">Documents</span></button>
+    <button class="nav-item" data-page="journal"><span class="nav-ico">📓</span><span class="nav-lbl">Journal</span></button>
   </nav>
 </div>
 
@@ -630,8 +630,15 @@ async function syncCloud(){
   try{
     const unsyncedEntries=journal.filter(j=>!j.synced);
     for(const entry of unsyncedEntries){
-      const p=new URLSearchParams({action:'addJournalEntry',token:cfg.token,eleve:eleve.code,entry:JSON.stringify(entry)});
-      const r=await fetch(`${cfg.apiUrl}?${p}`,{redirect:'follow'});
+      // POST — token dans le body, pas dans l'URL
+      const postUrl=new URL(cfg.apiUrl);
+      postUrl.searchParams.set('action','addJournalEntry');
+      const r=await fetch(postUrl.toString(),{
+        method:'POST',
+        redirect:'follow',
+        headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify({token:cfg.token,eleve:eleve.code,entry:JSON.stringify(entry)})
+      });
       const d=await r.json();
       if(d.ok||d.success){
         entry.synced=true;
@@ -652,6 +659,12 @@ function switchPage(page){
   if(page==='journal')updatePhotoCounter();
   if(page==='calendrier')renderCalendrier();
 }
+
+/* ═══ EVENT LISTENER DELEGUE (Phase 11) ═══ */
+document.querySelector('.bottom-nav').addEventListener('click',function(e){
+  var btn=e.target.closest('[data-page]');
+  if(btn)switchPage(btn.dataset.page);
+});
 
 function renderAll(){renderHeader();renderHome();renderProgress();renderCalendrier();renderJournal();renderDocsEleve();updatePhotoCounter();}
 function renderHeader(){document.getElementById('hdrName').textContent=`${eleve.prenom||''} ${eleve.nom||''}`.trim()||'—';document.getElementById('hdrClass').textContent=eleve.classe||'—';}
@@ -941,6 +954,14 @@ async function exportZIP(){
   const a=document.createElement('a');a.href=url;a.download=`journal_${eleve.nom}_${eleve.prenom}.txt`;a.click();
   URL.revokeObjectURL(url);toast('Journal téléchargé !','ok');
 }
+
+// Retry automatique des entrées journal non synchronisées au retour en ligne
+window.addEventListener('online',function(){
+  if(cfg.apiUrl&&cfg.token&&cfg.token!=='DEMO'&&journal.some(function(j){return !j.synced;})){
+    toast('Connexion retrouvée — synchronisation...','inf');
+    syncCloud();
+  }
+});
 
 document.addEventListener('DOMContentLoaded',()=>{
   const params=new URLSearchParams(window.location.search);

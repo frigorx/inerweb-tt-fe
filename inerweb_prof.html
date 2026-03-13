@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>inerWeb TT — Filière Énergétique — Professeur</title>
+<title>INERWEB PROG+ — Filière Énergétique — Professeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -15,11 +15,18 @@
 <script>
 (function(){
   var v = Date.now();
+  /* Phase 7 — Modules noyau (js/core/) puis progression (js/prog/) */
+  var coreMods = [
+    'core/core','core/state','core/api','core/utils','core/syncQueue',
+    'prog/prog-model','prog/prog-data','prog/prog-ui'
+  ];
+  /* Modules existants (retro-compat — js/*.js) puis sous-modules avances */
   var mods = ['core','sync-queue','jury','phases','exposition','impossibilites',
               'activites','tp-manager','photos','tache-complexe','signatures','rapport-pdf','fusion-eval',
               'historique','eval-tuteur','alertes','export-excel','radar',
-              'partenaires','documents','export-mod','journal-mod','scanner'];
-  mods.forEach(function(m){
+              'partenaires','documents','export-mod','journal-mod','scanner',
+              'radar/radarCompetences','alerts/alertSystem'];
+  coreMods.concat(mods).forEach(function(m){
     var s = document.createElement('script');
     s.src = 'js/' + m + '.js?v=' + v;
     s.defer = true;
@@ -432,23 +439,23 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
   </header>
 
   <nav class="top-nav" role="navigation" aria-label="Navigation principale">
-    <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="ni">🏠</span>Tableau</button>
-    <button class="nav-btn" data-tab="eleves" onclick="switchTab('eleves')"><span class="ni">👥</span>Élèves</button>
+    <button class="nav-btn active" data-tab="dashboard"><span class="ni">🏠</span>Tableau</button>
+    <button class="nav-btn" data-tab="eleves"><span class="ni">👥</span>Élèves</button>
     <div class="nav-sep"></div>
-    <button class="nav-btn" data-tab="activites" onclick="switchTab('activites')"><span class="ni">📋</span>Activités</button>
-    <button class="nav-btn" data-tab="progression" onclick="switchTab('progression')"><span class="ni">📅</span>Progression</button>
-    <button class="nav-btn" data-tab="stage" onclick="switchTab('stage')"><span class="ni">🏢</span>Stage</button>
+    <button class="nav-btn" data-tab="activites"><span class="ni">📋</span>Activités</button>
+    <button class="nav-btn" data-tab="progression"><span class="ni">📅</span>Progression</button>
+    <button class="nav-btn" data-tab="stage"><span class="ni">🏢</span>Stage</button>
     <div class="nav-sep"></div>
-    <button class="nav-btn" data-tab="bilan" onclick="switchTab('bilan')"><span class="ni">🏆</span>Bilan</button>
-    <button class="nav-btn" data-tab="rapport" onclick="switchTab('rapport')"><span class="ni">📝</span>Rapport</button>
-    <button class="nav-btn" data-tab="export" onclick="switchTab('export')"><span class="ni">📤</span>Export</button>
+    <button class="nav-btn" data-tab="bilan"><span class="ni">🏆</span>Bilan</button>
+    <button class="nav-btn" data-tab="rapport"><span class="ni">📝</span>Rapport</button>
+    <button class="nav-btn" data-tab="export"><span class="ni">📤</span>Export</button>
     <div class="nav-sep"></div>
-    <button class="nav-btn" data-tab="config" onclick="switchTab('config')"><span class="ni">⚙️</span>Config</button>
-    <button class="nav-btn" data-tab="admin" onclick="switchTab('admin')" id="navAdmin" style="display:none"><span class="ni">👑</span>Admin</button>
+    <button class="nav-btn" data-tab="config"><span class="ni">⚙️</span>Config</button>
+    <button class="nav-btn" data-tab="admin" id="navAdmin" style="display:none"><span class="ni">👑</span>Admin</button>
     <!-- E31/E32 tab-pane gardés mais accessibles via Activités uniquement -->
-    <button class="nav-btn" data-tab="e31" onclick="switchTab('e31')" style="display:none"><span class="ni">🔧</span>E31</button>
-    <button class="nav-btn" data-tab="e32" onclick="switchTab('e32')" style="display:none"><span class="ni">🔍</span>E32</button>
-    <button class="nav-btn" data-tab="e33" onclick="switchTab('e33')" style="display:none"><span class="ni">📋</span>E33</button>
+    <button class="nav-btn" data-tab="e31" style="display:none"><span class="ni">🔧</span>E31</button>
+    <button class="nav-btn" data-tab="e32" style="display:none"><span class="ni">🔍</span>E32</button>
+    <button class="nav-btn" data-tab="e33" style="display:none"><span class="ni">📋</span>E33</button>
   </nav>
 
   <main class="main-content" role="main" id="main-content">
@@ -463,15 +470,15 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
       </div>
       <div class="filter-bar" style="align-items:center;gap:.5rem;flex-wrap:wrap">
         <label style="font-weight:700;color:var(--bleu)">📚 Classe :</label>
-        <select id="dashFiltreClasse" onchange="renderDash()" style="font-weight:700;min-width:160px">
+        <select id="dashFiltreClasse" data-filter="dash" style="font-weight:700;min-width:160px">
           <option value="" disabled>— Choisir une classe —</option>
         </select>
-        <select id="dashFiltreAnnee" onchange="renderDash()" aria-label="Filtrer par année">
+        <select id="dashFiltreAnnee" data-filter="dash" aria-label="Filtrer par année">
           <option value="all">Toutes années</option>
           <option value="1">1ère année</option>
           <option value="2">2ème année</option>
         </select>
-        <select id="dashFiltreGroupe" onchange="renderDash()" aria-label="Filtrer par groupe">
+        <select id="dashFiltreGroupe" data-filter="dash" aria-label="Filtrer par groupe">
           <option value="all">Tous groupes</option>
           <option value="G1">Groupe 1</option>
           <option value="G2">Groupe 2</option>
@@ -498,15 +505,15 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
       </div>
       <div class="filter-bar">
         <label>Filtrer :</label>
-        <select id="filtreClasse" onchange="renderEleves()" aria-label="Filtrer par classe">
+        <select id="filtreClasse" data-filter="eleves" aria-label="Filtrer par classe">
           <option value="all">Toutes classes</option>
         </select>
-        <select id="filtreAnnee" onchange="renderEleves()" aria-label="Filtrer par année">
+        <select id="filtreAnnee" data-filter="eleves" aria-label="Filtrer par année">
           <option value="all">Toutes années</option>
           <option value="1">1ère année</option>
           <option value="2">2ème année</option>
         </select>
-        <select id="filtreGroupe" onchange="renderEleves()" aria-label="Filtrer par groupe">
+        <select id="filtreGroupe" data-filter="eleves" aria-label="Filtrer par groupe">
           <option value="all">Tous groupes</option>
           <option value="G1">Groupe 1</option>
           <option value="G2">Groupe 2</option>
@@ -718,7 +725,7 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
         <span style="font-weight:800;color:var(--bleu);font-size:.9rem">📅 Progression — Calendrier des activités</span>
         <div style="display:flex;gap:.3rem;align-items:center">
-          <select id="progFilter" aria-label="Filtrer la progression" onchange="renderProgression()" style="padding:.3rem .5rem;border:2px solid var(--gris3);border-radius:8px;font-size:.8rem">
+          <select id="progFilter" aria-label="Filtrer la progression" data-filter="progression" style="padding:.3rem .5rem;border:2px solid var(--gris3);border-radius:8px;font-size:.8rem">
             <option value="all">Toute la classe</option>
           </select>
           <button class="btn btn-ghost btn-xs" onclick="progPrevMonth()" aria-label="Mois précédent">◀</button>
@@ -1216,6 +1223,7 @@ const FILIERES = {
   }
 };
 
+/* getFiliere, getEpreuves, getComps, getCrits, getSits → js/prog/prog-model.js (copies locales conservées) */
 /** Détecte le référentiel d'un élève à partir de sa classe ou son champ referentiel */
 function getFiliere(student) {
   if (student.referentiel && FILIERES[student.referentiel]) return student.referentiel;
@@ -1277,42 +1285,7 @@ const DROITS_LABELS={
 };
 const CLASSES_DEFAUT=['CAP IFCA 1','CAP IFCA 2','2nde TNE','1ère MFER','Term MFER'];
 
-/* ═══ [B] ÉTAT GLOBAL (appState namespace) ═══ */
-window.appState = {
-  data:    { students:[], validations:{}, notes:{}, pfmpData:{}, partenaires:[], customCriteria:{}, compLocks:{}, sharedDocs:[] },
-  config:  { cfg:{}, appCfg:{} },
-  admin:   { users:[], classes:[], adminJournal:[] },
-  ui:      { cur:null, curCtx:'atelier', curSit:'A', curPhase:'formatif' },
-  session: { online:false, demoMode:false, isAdmin:false, currentUser:null }
-};
-
-/* Alias rétro-compatibles (getters/setters bidirectionnels) */
-// — data —
-Object.defineProperty(window,'students',    {get(){return appState.data.students;},      set(v){appState.data.students=v;},      configurable:true});
-Object.defineProperty(window,'validations', {get(){return appState.data.validations;},   set(v){appState.data.validations=v;},   configurable:true});
-Object.defineProperty(window,'notes',       {get(){return appState.data.notes;},         set(v){appState.data.notes=v;},         configurable:true});
-Object.defineProperty(window,'pfmpData',    {get(){return appState.data.pfmpData;},      set(v){appState.data.pfmpData=v;},      configurable:true});
-Object.defineProperty(window,'partenaires', {get(){return appState.data.partenaires;},   set(v){appState.data.partenaires=v;},   configurable:true});
-Object.defineProperty(window,'customCriteria',{get(){return appState.data.customCriteria;},set(v){appState.data.customCriteria=v;},configurable:true});
-Object.defineProperty(window,'compLocks',   {get(){return appState.data.compLocks;},     set(v){appState.data.compLocks=v;},     configurable:true});
-Object.defineProperty(window,'sharedDocs',  {get(){return appState.data.sharedDocs;},    set(v){appState.data.sharedDocs=v;},    configurable:true});
-// — config —
-Object.defineProperty(window,'cfg',    {get(){return appState.config.cfg;},    set(v){appState.config.cfg=v;},    configurable:true});
-Object.defineProperty(window,'appCfg', {get(){return appState.config.appCfg;}, set(v){appState.config.appCfg=v;}, configurable:true});
-// — admin —
-Object.defineProperty(window,'users',        {get(){return appState.admin.users;},        set(v){appState.admin.users=v;},        configurable:true});
-Object.defineProperty(window,'classes',      {get(){return appState.admin.classes;},      set(v){appState.admin.classes=v;},      configurable:true});
-Object.defineProperty(window,'adminJournal', {get(){return appState.admin.adminJournal;}, set(v){appState.admin.adminJournal=v;}, configurable:true});
-// — ui —
-Object.defineProperty(window,'cur',      {get(){return appState.ui.cur;},      set(v){appState.ui.cur=v;},      configurable:true});
-Object.defineProperty(window,'curCtx',   {get(){return appState.ui.curCtx;},   set(v){appState.ui.curCtx=v;},   configurable:true});
-Object.defineProperty(window,'curSit',   {get(){return appState.ui.curSit;},   set(v){appState.ui.curSit=v;},   configurable:true});
-Object.defineProperty(window,'curPhase', {get(){return appState.ui.curPhase;}, set(v){appState.ui.curPhase=v;}, configurable:true});
-// — session —
-Object.defineProperty(window,'online',      {get(){return appState.session.online;},      set(v){appState.session.online=v;},      configurable:true});
-Object.defineProperty(window,'demoMode',    {get(){return appState.session.demoMode;},    set(v){appState.session.demoMode=v;},    configurable:true});
-Object.defineProperty(window,'isAdmin',     {get(){return appState.session.isAdmin;},     set(v){appState.session.isAdmin=v;},     configurable:true});
-Object.defineProperty(window,'currentUser', {get(){return appState.session.currentUser;}, set(v){appState.session.currentUser=v;}, configurable:true});
+/* État → js/core/state.js */
 
 /* Exposer les données globales pour les modules js/ externes */
 window.COMP_EP2=COMP_EP2;window.COMP_EP3=COMP_EP3;window.COMP_E2=COMP_E2;window.COMP_E31=COMP_E31;window.COMP_E32=COMP_E32;window.COMP_E33=COMP_E33;window.COMP_PFMP=COMP_PFMP;window.COMP_TNE=COMP_TNE;
@@ -1400,6 +1373,7 @@ function startAutoBackup(){
   if(backupInterval)clearInterval(backupInterval);
   backupInterval=setInterval(async()=>{if(students.length>0){await createBackup(true);}},5*60*1000);
 }
+/* saveLocalData → js/core/utils.js (copie locale conservée) */
 async function saveLocalData(){
   const data={id:'main',students,validations,notes,pfmpData,appCfg,customCriteria,compLocks,sharedDocs,lastSave:new Date().toISOString()};
   if(db){await saveIDB('data',data);}
@@ -1416,12 +1390,11 @@ async function loadLocalData(){
 }
 
 /* ═══ [C] CORE ═══ */
+/* cleanUrl → js/core/api.js (copie locale conservée pour rétro-compatibilité) */
 function cleanUrl(raw){
   raw=raw.replace(/\s+/g,'').trim();
-  // Extraire la DERNIÈRE URL valide (au cas où concaténation)
   const all=[...raw.matchAll(/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec/g)];
   if(all.length>0) return 'https://'+all[all.length-1][0];
-  // Fallback: extraire l'ID de déploiement
   const id=raw.match(/AKfycb[A-Za-z0-9_-]+/);
   if(id) return 'https://script.google.com/macros/s/'+id[0]+'/exec';
   raw=raw.replace(/^(https?:\/\/|script\.\w+\/\/|https?\/\/)/i,'');
@@ -1442,6 +1415,7 @@ function loadDemoMode(){
   demoMode=true; startApp();
   setTimeout(()=>{loadDemoData();document.body.classList.add('demo-mode');},200);
 }
+/* DEFAULT_CFG → js/core/api.js */
 const DEFAULT_CFG={apiUrl:'https://script.google.com/macros/s/AKfycbzEbzLo57x0u0k2wjAzyLdZ42iVZdHdOwmPd5Ioe6fjApuSftuSckZ9svKpajbyjEuhVg/exec',apiKey:'',nomProf:'',baseUrl:'https://frigorx.github.io/inerweb-tt-fe/'};
 function loadConfig(){
   const s=localStorage.getItem(SCFG);
@@ -1469,6 +1443,7 @@ function showConfigScreen(){
   document.body.classList.add('show-config');
   document.body.classList.remove('show-app');
 }
+/* apiCall → js/core/api.js (copie locale conservée pour rétro-compatibilité) */
 async function apiCall(params){
   if(!cfg.apiUrl) throw new Error('no url');
   params.key=cfg.apiKey;
@@ -1493,12 +1468,14 @@ async function apiCall(params){
   if(d.error) throw new Error(d.error);
   return d;
 }
+/* saveLocal, loadLocal → js/core/utils.js (copies locales conservées) */
 function saveLocal(){
   saveLocalData().catch(()=>toast('Erreur sauvegarde','err'));
 }
 function loadLocal(){
   loadLocalData().then(()=>{try{partenaires=JSON.parse(localStorage.getItem(SPART)||'[]');}catch{partenaires=[];}}).catch(()=>{});
 }
+/* syncAll → js/core/utils.js (copie locale conservée) */
 async function syncAll(){
   if(!cfg.apiUrl){setSyncState('error');return;}
   setSyncState('syncing');
@@ -1507,15 +1484,20 @@ async function syncAll(){
     if(!Array.isArray(dash)) throw new Error('invalid');
     students=dash;window.students=students;
     validations={}; notes={};
-    await Promise.all(students.slice(0,30).map(async s=>{
-      try{
-        const[v,n]=await Promise.all([apiCall({action:'getValidations',eleve:s.code}),apiCall({action:'getNotes',eleve:s.code})]);
-        validations[s.code]=Array.isArray(v)?v:[];
-        const e2=Array.isArray(n)?n.find(x=>x.epreuve==='E31'):null;
-        const e3=Array.isArray(n)?n.find(x=>x.epreuve==='E32'):null;
-        notes[s.code]={E31:e2||{},E32:e3||{},E33:notes[s.code]?.E33||{}};
-      }catch{validations[s.code]=validations[s.code]||[];notes[s.code]={E31:{},E32:{},E33:notes[s.code]?.E33||{}};}
-    }));
+    // Traitement par lots de 10 pour éviter surcharge API
+    const BATCH_SIZE = 10;
+    for(let i = 0; i < students.length; i += BATCH_SIZE){
+      const batch = students.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(async s=>{
+        try{
+          const[v,n]=await Promise.all([apiCall({action:'getValidations',eleve:s.code}),apiCall({action:'getNotes',eleve:s.code})]);
+          validations[s.code]=Array.isArray(v)?v:[];
+          const e2=Array.isArray(n)?n.find(x=>x.epreuve==='E31'):null;
+          const e3=Array.isArray(n)?n.find(x=>x.epreuve==='E32'):null;
+          notes[s.code]={E31:e2||{},E32:e3||{},E33:notes[s.code]?.E33||{}};
+        }catch{validations[s.code]=validations[s.code]||[];notes[s.code]={E31:{},E32:{},E33:notes[s.code]?.E33||{}};}
+      }));
+    }
     online=true; saveLocal(); setSyncState('ok'); updateAll();
     toast(`${students.length} élèves synchronisés`,'ok');
   }catch(e){
@@ -1523,6 +1505,7 @@ async function syncAll(){
     toast('Hors-ligne — données locales','warn');
   }
 }
+/* setSyncState → js/core/utils.js (copie locale conservée) */
 function setSyncState(s){
   const d=document.getElementById('syncDot'),l=document.getElementById('syncLbl');
   if(!d)return;
@@ -1531,11 +1514,13 @@ function setSyncState(s){
   if(s==='syncing'){d.classList.add('syncing');l.textContent='Sync...';}
   if(s==='error'){d.classList.add('offline');l.textContent='Hors-ligne';}
 }
+/* pushVal → js/core/utils.js (copie locale conservée) */
 async function pushVal(data){
   const entry={...data,evaluateur:cfg.nomProf||'Prof',timestamp:new Date().toISOString(),phase:curPhase};
   if(!validations[cur]) validations[cur]=[];
   validations[cur].push(entry); saveLocal(); toast('✓ Enregistré','ok');
-  if(online){try{await apiCall({action:'saveValidation',eleve:cur,data:entry});}catch{toast('En attente sync','warn');}}
+  if(online){try{await syncQueueWrapper.smartSend({action:'saveValidation',eleve:cur,data:entry},apiCall,toast);}catch{toast('En attente sync','warn');}}
+  else{syncQueueWrapper.push({action:'saveValidation',eleve:cur,data:entry});toast('Sauvegardé hors-ligne','warn');}
 }
 
 /* ═══ [D] NAVIGATION ═══ */
@@ -2014,6 +1999,7 @@ function getVal(code,ep,comp,crit){
   if(!v.length)return null;
   return v.sort((a,b)=>String(b.timestamp||'').localeCompare(String(a.timestamp||'')))[0].niveau;
 }
+/* getLv, getObs → js/prog/prog-data.js (copies locales conservées) */
 function getLv(code,ep,comp){
   const v=(validations[code]||[]).filter(x=>x.epreuve===ep&&x.competence===comp&&(!x.critere||x.critere===''));
   if(!v.length)return null;
@@ -2320,13 +2306,17 @@ async function profHandlePhoto(files,code){
   if(!pfmpData[code])pfmpData[code]={journal:[]};
   pfmpData[code].journal.push(entry);
   saveLocal();
-  // Sync si possible
+  // Sync si possible — via syncQueue si hors-ligne
   if(cfg.apiUrl&&cfg.apiKey){
-    try{
-      const d=await apiCall({action:'addJournalEntry',eleve:code,entry:JSON.stringify(entry)});
-      if(d.ok)entry.synced=true;
-      saveLocal();
-    }catch(e){console.warn('Sync photo prof:',e);}
+    if(navigator.onLine){
+      try{
+        const d=await apiCall({action:'addJournalEntry',eleve:code,entry:JSON.stringify(entry)});
+        if(d.ok)entry.synced=true;
+        saveLocal();
+      }catch(e){syncQueueWrapper.push({action:'addJournalEntry',eleve:code,entry:JSON.stringify(entry)});toast('Photo en attente de sync','warn');}
+    }else{
+      syncQueueWrapper.push({action:'addJournalEntry',eleve:code,entry:JSON.stringify(entry)});toast('Sauvegardé hors-ligne','warn');
+    }
   }
   toast(`${photos.length} photo(s) ajoutée(s) pour ${code}`,'ok');
   viewStagePhotos(code);
@@ -2542,6 +2532,7 @@ function renderComm(){
 }
 
 /* ═══ [H] BILAN ═══ */
+/* calcNote → js/prog/prog-data.js (copie locale conservée) */
 function calcNote(code,ep){
   const comps=ep==='E31'?COMP_E31:ep==='E33'?COMP_E33:COMP_E32;
   const validees=notes[code]?.[ep]?.validees||{};
@@ -3672,6 +3663,7 @@ function doEditStudent(code){
   s.referentiel=getFiliere(s);
   window.students=students;saveLocal();closeModal();updateAll();toast(`${s.nom} mis à jour`,'ok');
 }
+/* updateStor, updateAll → js/core/utils.js (copies locales conservées) */
 function updateStor(){
   const used=new Blob([localStorage.getItem(SK)||'']).size;
   const el=document.getElementById('storTxt');if(el)el.textContent=`${(used/1024/1024).toFixed(1)} MB / 5 MB`;
@@ -3902,10 +3894,8 @@ function doAddClasse(){
 }
 function delClasse(i){
   const cl=classes[i];if(!cl)return;
-  if(!confirm(`Supprimer la classe "${cl}" ?`))return;
-  logAdmin('Suppression classe',cl);
-  classes.splice(i,1);
-  saveAdminData();renderClasses();toast('Classe supprimée','ok');
+  showModal('Confirmer la suppression',`<p>Supprimer la classe "<strong>${cl}</strong>" ?</p><p style="color:var(--rouge);font-size:.9em;">Cette action est irréversible.</p>`,`<button class="btn btn-rouge" onclick="logAdmin('Suppression classe','${cl}');classes.splice(${i},1);saveAdminData();renderClasses();toast('Classe supprimée','ok');closeModal();">Supprimer</button><button class="btn" onclick="closeModal()">Annuler</button>`);
+  return;
 }
 function renderAdminTab(){
   loadAdminData();
@@ -4148,6 +4138,22 @@ function handleDeepLink(){
 }
 
 /* Scanner QR → js/scanner.js */
+
+/* ═══ EVENT LISTENERS DELEGUES (Phase 11) ═══ */
+// Navigation par onglets — délégation sur la nav
+document.querySelector('.top-nav').addEventListener('click',function(e){
+  var btn=e.target.closest('[data-tab]');
+  if(btn)switchTab(btn.dataset.tab);
+});
+// Filtres select — délégation sur le main-content
+document.getElementById('main-content').addEventListener('change',function(e){
+  var sel=e.target.closest('[data-filter]');
+  if(!sel)return;
+  var f=sel.dataset.filter;
+  if(f==='dash')renderDash();
+  else if(f==='eleves')renderEleves();
+  else if(f==='progression')renderProgression();
+});
 
 document.addEventListener('DOMContentLoaded',()=>{
   const hasConfig=loadConfig();

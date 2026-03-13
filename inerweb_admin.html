@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>inerWeb TT — Administration Filière Énergétique</title>
+<title>INERWEB PROG+ — Administration Filière Énergétique</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -136,7 +136,7 @@ tr:hover{background:var(--bleu3);}
   <div class="hdr-logo">
     <span class="hdr-ico">🔐</span>
     <div class="hdr-txt">
-      <h1>inerWeb TT</h1>
+      <h1>INERWEB PROG+</h1>
       <p>Administration</p>
     </div>
   </div>
@@ -745,19 +745,76 @@ function copyTokens(){
   navigator.clipboard.writeText(txt).then(()=>toast('Copié !','ok'));
 }
 
-/** TODO: implémenter la génération PDF avec QR codes */
+/** Génération PDF/HTML des identifiants élèves */
 function exportIdentifiants(){
-  toast('Export PDF en cours de développement','inf');
+  if(!users||!users.length){toast('Aucun utilisateur à exporter','warn');return;}
+  // Filtrer les utilisateurs avec tokens
+  const liste=users.filter(u=>u.token_eleve||u.token_tuteur);
+  if(!liste.length){toast('Aucun identifiant à exporter','warn');return;}
+
+  if(window.jspdf && window.jspdf.jsPDF){
+    // Génération PDF avec jsPDF
+    const doc=new window.jspdf.jsPDF();
+    doc.setFontSize(16);
+    doc.text('Identifiants élèves — inerWeb TT FE',14,20);
+    doc.setFontSize(10);
+    doc.text('Généré le '+new Date().toLocaleDateString('fr-FR'),14,28);
+    let y=40;
+    doc.setFontSize(9);
+    liste.forEach((u,i)=>{
+      if(y>270){doc.addPage();y=20;}
+      doc.setFont(undefined,'bold');
+      doc.text(`${u.nom||''} ${u.prenom||''}`,14,y);
+      doc.setFont(undefined,'normal');
+      doc.text(`Token élève : ${u.token_eleve||'—'}`,20,y+5);
+      doc.text(`Token tuteur : ${u.token_tuteur||'—'}`,20,y+10);
+      doc.text(`Code : ${u.code||u.id||'—'}`,20,y+15);
+      y+=22;
+    });
+    doc.save('identifiants_inerweb.pdf');
+    toast('PDF généré','ok');
+  } else {
+    // Fallback : tableau HTML imprimable
+    const w=window.open('','_blank');
+    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+      <title>Identifiants élèves</title>
+      <style>body{font-family:Arial,sans-serif;padding:20px;}
+      table{width:100%;border-collapse:collapse;margin-top:16px;}
+      th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:13px;}
+      th{background:#1b3a63;color:#fff;}
+      h1{font-size:18px;color:#1b3a63;}
+      .date{color:#888;font-size:12px;}
+      @media print{button{display:none;}}</style></head><body>
+      <h1>Identifiants élèves — inerWeb TT FE</h1>
+      <p class="date">Généré le ${new Date().toLocaleDateString('fr-FR')}</p>
+      <button onclick="window.print()">🖨️ Imprimer</button>
+      <table><thead><tr><th>Nom</th><th>Prénom</th><th>Code</th><th>Token élève</th><th>Token tuteur</th></tr></thead><tbody>`);
+    liste.forEach(u=>{
+      w.document.write(`<tr><td>${u.nom||'—'}</td><td>${u.prenom||'—'}</td><td>${u.code||u.id||'—'}</td><td>${u.token_eleve||'—'}</td><td>${u.token_tuteur||'—'}</td></tr>`);
+    });
+    w.document.write('</tbody></table></body></html>');
+    w.document.close();
+    toast('Tableau imprimable ouvert','ok');
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
    GESTION DES CLÉS SYSTÈME
    ═══════════════════════════════════════════════════════════ */
 
-/** TODO: récupérer la clé via l'API au lieu de renvoyer vers le Sheet */
-function showKey(type){
+/** Récupère et affiche la clé via l'API */
+async function showKey(type){
   const el=document.getElementById(type+'KeyDisplay');
   if(el.textContent.includes('•')){
+    try{
+      const d=await apiCall('getKey',{keyType:type},{silent:true});
+      if(d&&d.key){
+        el.textContent=d.key;
+        toast('Clé récupérée','ok');
+        return;
+      }
+    }catch(e){}
+    // Fallback : redirection vers le Sheet
     toast('Consultez le Sheet CONFIG pour voir la clé','inf');
   }
 }

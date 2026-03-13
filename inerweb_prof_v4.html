@@ -1,3 +1,4 @@
+<!-- ARCHIVE — Version 4 obsolète. Remplacée par inerweb_prof.html (v5+ modulaire). Conservée pour référence uniquement. -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -600,7 +601,7 @@ function saveConfig(){
   const key=document.getElementById('cfgKey').value.trim();
   const nom=document.getElementById('cfgNom').value.trim();
   const base=document.getElementById('cfgBase').value.trim()||'https://frigorx.github.io/inerweb-tt/';
-  if(!url||!key||!nom){alert('URL API, clé et nom obligatoires.');return;}
+  if(!url||!key||!nom){toast('URL API, clé et nom obligatoires.','err');return;}
   cfg={apiUrl:url,apiKey:key,nomProf:nom,baseUrl:base};
   localStorage.setItem(SCFG,JSON.stringify(cfg));
   startApp();
@@ -655,15 +656,20 @@ async function syncAll(){
     if(!Array.isArray(dash)) throw new Error('invalid');
     students=dash;
     validations={}; notes={};
-    await Promise.all(students.slice(0,30).map(async s=>{
-      try{
-        const[v,n]=await Promise.all([apiCall({action:'getValidations',eleve:s.code}),apiCall({action:'getNotes',eleve:s.code})]);
-        validations[s.code]=Array.isArray(v)?v:[];
-        const e2=Array.isArray(n)?n.find(x=>x.epreuve==='EP2'):null;
-        const e3=Array.isArray(n)?n.find(x=>x.epreuve==='EP3'):null;
-        notes[s.code]={EP2:e2||{},EP3:e3||{}};
-      }catch{validations[s.code]=[];notes[s.code]={EP2:{},EP3:{}};}
-    }));
+    // Traitement par lots de 10 pour éviter surcharge API
+    const BATCH_SIZE = 10;
+    for(let i = 0; i < students.length; i += BATCH_SIZE){
+      const batch = students.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(async s=>{
+        try{
+          const[v,n]=await Promise.all([apiCall({action:'getValidations',eleve:s.code}),apiCall({action:'getNotes',eleve:s.code})]);
+          validations[s.code]=Array.isArray(v)?v:[];
+          const e2=Array.isArray(n)?n.find(x=>x.epreuve==='EP2'):null;
+          const e3=Array.isArray(n)?n.find(x=>x.epreuve==='EP3'):null;
+          notes[s.code]={EP2:e2||{},EP3:e3||{}};
+        }catch{validations[s.code]=[];notes[s.code]={EP2:{},EP3:{}};}
+      }));
+    }
     online=true; saveLocal(); setSyncState('ok'); updateAll();
     toast(`${students.length} élèves synchronisés`,'ok');
   }catch(e){

@@ -72,9 +72,7 @@
   }
 
   function supprimerDoc(id){
-    if(!confirm('Supprimer ce document du drive ?'))return;
-    window.sharedDocs=window.sharedDocs.filter(function(d){return d.id!==id;});
-    window.saveLocal();renderSharedDocs();window.toast('Document supprimé','warn');
+    window.showModal('Confirmer la suppression','<p>Supprimer ce document du drive ?</p><p style="color:var(--rouge);font-size:.9em;">Cette action est irréversible.</p>','<button class="btn btn-rouge" onclick="window.sharedDocs=window.sharedDocs.filter(function(d){return d.id!==\''+id+'\';});window.saveLocal();window.renderSharedDocs();window.toast(\'Document supprimé\',\'warn\');closeModal();">Supprimer</button><button class="btn" onclick="closeModal()">Annuler</button>');
   }
 
   function telechargerDoc(id){

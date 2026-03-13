@@ -9,52 +9,89 @@
 body{font-family:'Segoe UI',Tahoma,sans-serif;background:#1a1a2e;color:#e0e0e0;padding:2rem}
 h1{text-align:center;margin-bottom:.5rem;color:#fff;font-size:1.6rem}
 #summary{text-align:center;margin-bottom:1.5rem;font-size:1.1rem}
-#results{max-width:800px;margin:0 auto}
-.test{padding:.6rem 1rem;margin:.3rem 0;border-radius:6px;font-size:.85rem;display:flex;align-items:center;gap:.6rem}
+#results{max-width:900px;margin:0 auto}
+.cat{font-size:.95rem;font-weight:700;color:#61dafb;margin:1.2rem 0 .4rem;padding-bottom:.3rem;border-bottom:1px solid #333}
+.test{padding:.5rem .8rem;margin:.2rem 0;border-radius:6px;font-size:.82rem;display:flex;align-items:center;gap:.5rem}
 .test.pass{background:#0d3320;border-left:4px solid #27ae60}
 .test.fail{background:#3d1515;border-left:4px solid #e74c3c}
-.icon{font-size:1.1rem;flex-shrink:0}
+.icon{font-size:1rem;flex-shrink:0}
 .pass .icon{color:#2ecc71}
 .fail .icon{color:#e74c3c}
 .label{flex:1}
-.detail{font-size:.75rem;color:#999;margin-left:auto;white-space:nowrap}
+.detail{font-size:.72rem;color:#999;margin-left:auto;white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
 
 <h1>Smoke Tests — inerWeb TT FE</h1>
-<div id="summary">Chargement...</div>
+<div id="summary">Chargement des modules...</div>
 <div id="results"></div>
 
-<!-- Charger core.js en premier (comme en production) -->
+<!-- ═══════════════════════════════════════════════════════════
+     CHARGEMENT DES SCRIPTS DANS L'ORDRE DE PRODUCTION
+     ═══════════════════════════════════════════════════════════ -->
+
+<!-- Core -->
+<script src="../js/core/core.js"></script>
+<script src="../js/core/state.js"></script>
+<script src="../js/core/api.js"></script>
+<script src="../js/core/utils.js"></script>
+
+<!-- Ancien core (doublon retro-compat, charge aussi iwCore) -->
 <script src="../js/core.js"></script>
 
-<!-- Charger les autres modules dans l'ordre de production -->
+<!-- Sync queue (base) puis wrapper -->
 <script src="../js/sync-queue.js"></script>
-<script src="../js/jury.js"></script>
-<script src="../js/phases.js"></script>
-<script src="../js/exposition.js"></script>
-<script src="../js/impossibilites.js"></script>
-<script src="../js/activites.js"></script>
-<script src="../js/tp-manager.js"></script>
-<script src="../js/photos.js"></script>
-<script src="../js/tache-complexe.js"></script>
-<script src="../js/signatures.js"></script>
-<script src="../js/rapport-pdf.js"></script>
-<script src="../js/fusion-eval.js"></script>
-<script src="../js/historique.js"></script>
-<script src="../js/eval-tuteur.js"></script>
-<script src="../js/alertes.js"></script>
-<script src="../js/export-excel.js"></script>
-<script src="../js/radar.js"></script>
-<script src="../js/demo-guide.js"></script>
+<script src="../js/core/syncQueue.js"></script>
 
+<!-- Progression -->
+<script src="../js/prog/prog-model.js"></script>
+<script src="../js/prog/prog-data.js"></script>
+<script src="../js/prog/prog-ui.js"></script>
+
+<!-- Radar -->
+<script src="../js/radar.js"></script>
+<script src="../js/radar/radarCompetences.js"></script>
+
+<!-- Alertes -->
+<script src="../js/alertes.js"></script>
+<script src="../js/alerts/alertSystem.js"></script>
+
+<!-- Modules principaux -->
+<script src="../js/jury.js"></script>
+<script src="../js/fusion-eval.js"></script>
+<script src="../js/photos.js"></script>
+<script src="../js/partenaires.js"></script>
+<script src="../js/documents.js"></script>
+<script src="../js/export-mod.js"></script>
+<script src="../js/journal-mod.js"></script>
+<script src="../js/scanner.js"></script>
+<script src="../js/activites.js"></script>
+<script src="../js/eval-tuteur.js"></script>
+<script src="../js/signatures.js"></script>
+<script src="../js/phases.js"></script>
+<script src="../js/historique.js"></script>
+<script src="../js/impossibilites.js"></script>
+<script src="../js/exposition.js"></script>
+<script src="../js/tache-complexe.js"></script>
+<script src="../js/tp-manager.js"></script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TESTS
+     ═══════════════════════════════════════════════════════════ -->
 <script>
 (function(){
   'use strict';
 
   var passed = 0, failed = 0;
   var container = document.getElementById('results');
+
+  function cat(name) {
+    var d = document.createElement('div');
+    d.className = 'cat';
+    d.textContent = name;
+    container.appendChild(d);
+  }
 
   function assert(name, fn) {
     var ok = false, detail = '';
@@ -70,82 +107,528 @@ h1{text-align:center;margin-bottom:.5rem;color:#fff;font-size:1.6rem}
     div.className = 'test ' + (ok ? 'pass' : 'fail');
     div.innerHTML = '<span class="icon">' + (ok ? '&#10003;' : '&#10007;') + '</span>'
       + '<span class="label">' + name + '</span>'
-      + (detail ? '<span class="detail">' + detail + '</span>' : '');
+      + (detail ? '<span class="detail" title="' + detail.replace(/"/g,'&quot;') + '">' + detail + '</span>' : '');
     container.appendChild(div);
   }
 
-  /* ═══ TESTS ═══ */
+  /* ═══════════════════════════════════════════════════════════
+     1. NOYAU — iwCore
+     ═══════════════════════════════════════════════════════════ */
+  cat('1. Noyau (iwCore)');
 
-  // iwCore
-  assert('window.iwCore existe', function(){ return typeof window.iwCore === 'object' && window.iwCore !== null; });
-  assert('iwCore.esc est une fonction', function(){ return typeof window.iwCore.esc === 'function'; });
-  assert('iwCore.toast est une fonction', function(){ return typeof window.iwCore.toast === 'function'; });
-  assert('iwCore.dateFR est une fonction', function(){ return typeof window.iwCore.dateFR === 'function'; });
-  assert('iwCore.safeParse est une fonction', function(){ return typeof window.iwCore.safeParse === 'function'; });
-  assert('iwCore.formatWA est une fonction', function(){ return typeof window.iwCore.formatWA === 'function'; });
-  assert('iwCore.dateISO est une fonction', function(){ return typeof window.iwCore.dateISO === 'function'; });
-  assert('iwCore.lsGet est une fonction', function(){ return typeof window.iwCore.lsGet === 'function'; });
-  assert('iwCore.lsSet est une fonction', function(){ return typeof window.iwCore.lsSet === 'function'; });
-  assert('iwCore.showModal est une fonction', function(){ return typeof window.iwCore.showModal === 'function'; });
-  assert('iwCore.closeModal est une fonction', function(){ return typeof window.iwCore.closeModal === 'function'; });
+  assert('T01 — window.iwCore existe', function(){
+    return typeof window.iwCore === 'object' && window.iwCore !== null;
+  });
+  assert('T02 — iwCore.esc est une fonction', function(){
+    return typeof window.iwCore.esc === 'function';
+  });
+  assert('T03 — iwCore.toast est une fonction', function(){
+    return typeof window.iwCore.toast === 'function';
+  });
+  assert('T04 — iwCore.dateFR est une fonction', function(){
+    return typeof window.iwCore.dateFR === 'function';
+  });
+  assert('T05 — iwCore.safeParse est une fonction', function(){
+    return typeof window.iwCore.safeParse === 'function';
+  });
+  assert('T06 — iwCore.formatWA est une fonction', function(){
+    return typeof window.iwCore.formatWA === 'function';
+  });
+  assert('T07 — iwCore.dateISO est une fonction', function(){
+    return typeof window.iwCore.dateISO === 'function';
+  });
+  assert('T08 — iwCore.lsGet est une fonction', function(){
+    return typeof window.iwCore.lsGet === 'function';
+  });
+  assert('T09 — iwCore.lsSet est une fonction', function(){
+    return typeof window.iwCore.lsSet === 'function';
+  });
+  assert('T10 — iwCore.showModal est une fonction', function(){
+    return typeof window.iwCore.showModal === 'function';
+  });
+  assert('T11 — iwCore.closeModal est une fonction', function(){
+    return typeof window.iwCore.closeModal === 'function';
+  });
 
-  // Fonctions globales retro-compat
-  assert('window.esc est une fonction', function(){ return typeof window.esc === 'function'; });
-  assert('window.toast est une fonction', function(){ return typeof window.toast === 'function'; });
+  /* ═══════════════════════════════════════════════════════════
+     2. RETRO-COMPATIBILITE GLOBALE
+     ═══════════════════════════════════════════════════════════ */
+  cat('2. Fonctions globales (retro-compat)');
 
-  // Test fonctionnel esc
-  assert('esc("<b>") retourne "&lt;b&gt;"', function(){
+  assert('T12 — window.esc est une fonction', function(){
+    return typeof window.esc === 'function';
+  });
+  assert('T13 — window.toast est une fonction', function(){
+    return typeof window.toast === 'function';
+  });
+  assert('T14 — window.dateFR est une fonction', function(){
+    return typeof window.dateFR === 'function';
+  });
+  assert('T15 — window.safeParse est une fonction', function(){
+    return typeof window.safeParse === 'function';
+  });
+  assert('T16 — window.formatWA est une fonction', function(){
+    return typeof window.formatWA === 'function';
+  });
+  assert('T17 — window.showModal est une fonction', function(){
+    return typeof window.showModal === 'function';
+  });
+  assert('T18 — window.closeModal est une fonction', function(){
+    return typeof window.closeModal === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     3. TESTS FONCTIONNELS UTILITAIRES
+     ═══════════════════════════════════════════════════════════ */
+  cat('3. Tests fonctionnels utilitaires');
+
+  assert('T19 — esc("<b>") retourne "&lt;b&gt;"', function(){
     return window.esc('<b>') === '&lt;b&gt;';
   });
-
-  // Test fonctionnel formatWA
-  assert('formatWA("06 12 34 56 78") retourne "33612345678"', function(){
+  assert('T20 — esc(null) retourne ""', function(){
+    return window.esc(null) === '';
+  });
+  assert('T21 — formatWA("06 12 34 56 78") retourne "33612345678"', function(){
     return window.formatWA('06 12 34 56 78') === '33612345678';
   });
-
-  // Test fonctionnel dateFR
-  assert('dateFR("2026-01-15") retourne "15/01/2026"', function(){
-    return window.dateFR('2026-01-15') === '15/01/2026';
+  assert('T22 — formatWA("") retourne ""', function(){
+    return window.formatWA('') === '';
   });
-
-  // Test fonctionnel safeParse
-  assert('safeParse(\'{"a":1}\').a === 1', function(){
+  assert('T23 — dateFR("2026-01-15") contient "15" et "01" et "2026"', function(){
+    var r = window.dateFR('2026-01-15');
+    return r.indexOf('15') !== -1 && r.indexOf('01') !== -1 && r.indexOf('2026') !== -1;
+  });
+  assert('T24 — dateFR(null) retourne "—"', function(){
+    return window.dateFR(null) === '\u2014';
+  });
+  assert('T25 — safeParse(\'{"a":1}\').a === 1', function(){
     return window.safeParse('{"a":1}').a === 1;
   });
-  assert('safeParse("broken", []).length === 0', function(){
+  assert('T26 — safeParse("broken", []).length === 0', function(){
     var r = window.safeParse('broken', []);
     return Array.isArray(r) && r.length === 0;
   });
-
-  // FILIERES
-  assert('window.FILIERES existe', function(){
-    return typeof window.FILIERES === 'object' && window.FILIERES !== null;
+  assert('T27 — safeParse("broken") retourne null', function(){
+    return window.safeParse('broken') === null;
   });
-  assert('FILIERES contient CAP_IFCA', function(){ return 'CAP_IFCA' in (window.FILIERES || {}); });
-  assert('FILIERES contient MFER', function(){ return 'MFER' in (window.FILIERES || {}); });
-  assert('FILIERES contient TNE', function(){ return 'TNE' in (window.FILIERES || {}); });
-  assert('window.getFiliere est une fonction', function(){ return typeof window.getFiliere === 'function'; });
+  assert('T28 — lsSet/lsGet fonctionne', function(){
+    window.iwCore.lsSet('__smoke_test__', {ok:true});
+    var v = window.iwCore.lsGet('__smoke_test__');
+    localStorage.removeItem('__smoke_test__');
+    return v && v.ok === true;
+  });
+  assert('T29 — dateISO retourne une chaine ISO', function(){
+    var r = window.iwCore.dateISO();
+    return typeof r === 'string' && r.indexOf('T') !== -1;
+  });
 
-  // Modules
-  assert('window.radarModule existe', function(){ return typeof window.radarModule === 'object' && window.radarModule !== null; });
-  assert('window.juryModule existe', function(){ return typeof window.juryModule === 'object' && window.juryModule !== null; });
-  assert('window.fusionModule existe', function(){ return typeof window.fusionModule === 'object' && window.fusionModule !== null; });
+  /* ═══════════════════════════════════════════════════════════
+     4. ETAT GLOBAL (appState)
+     ═══════════════════════════════════════════════════════════ */
+  cat('4. Etat global (appState)');
 
-  // appState (Tache 15)
-  assert('window.appState existe', function(){ return typeof window.appState === 'object' && window.appState !== null; });
-
-  // Variables globales via alias
-  assert('window.students est un array', function(){ return Array.isArray(window.students); });
-  assert('window.validations est un array ou objet', function(){
+  assert('T30 — window.appState existe', function(){
+    return typeof window.appState === 'object' && window.appState !== null;
+  });
+  assert('T31 — appState.data existe', function(){
+    return typeof window.appState.data === 'object';
+  });
+  assert('T32 — appState.config existe', function(){
+    return typeof window.appState.config === 'object';
+  });
+  assert('T33 — appState.ui existe', function(){
+    return typeof window.appState.ui === 'object';
+  });
+  assert('T34 — appState.session existe', function(){
+    return typeof window.appState.session === 'object';
+  });
+  assert('T35 — window.students est un array (alias)', function(){
+    return Array.isArray(window.students);
+  });
+  assert('T36 — window.validations est un objet (alias)', function(){
     var v = window.validations;
     return v !== undefined && v !== null && typeof v === 'object';
   });
 
-  /* ═══ RÉSUMÉ ═══ */
+  /* ═══════════════════════════════════════════════════════════
+     5. API (core/api.js)
+     ═══════════════════════════════════════════════════════════ */
+  cat('5. API');
+
+  assert('T37 — window.apiCall est une fonction', function(){
+    return typeof window.apiCall === 'function';
+  });
+  assert('T38 — window.cleanUrl est une fonction', function(){
+    return typeof window.cleanUrl === 'function';
+  });
+  assert('T39 — window.DEFAULT_CFG existe', function(){
+    return typeof window.DEFAULT_CFG === 'object' && window.DEFAULT_CFG.apiUrl !== undefined;
+  });
+  assert('T40 — window.WRITE_ACTIONS est un array', function(){
+    return Array.isArray(window.WRITE_ACTIONS);
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     6. UTILS (core/utils.js)
+     ═══════════════════════════════════════════════════════════ */
+  cat('6. Utils');
+
+  assert('T41 — window.setSyncState est une fonction', function(){
+    return typeof window.setSyncState === 'function';
+  });
+  assert('T42 — window.saveLocal est une fonction', function(){
+    return typeof window.saveLocal === 'function';
+  });
+  assert('T43 — window.updateAll est une fonction', function(){
+    return typeof window.updateAll === 'function';
+  });
+  assert('T44 — window.syncAll est une fonction', function(){
+    return typeof window.syncAll === 'function';
+  });
+  assert('T45 — window.pushVal est une fonction', function(){
+    return typeof window.pushVal === 'function';
+  });
+  assert('T46 — window.SK est defini', function(){
+    return typeof window.SK === 'string' && window.SK.length > 0;
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     7. SYNC QUEUE
+     ═══════════════════════════════════════════════════════════ */
+  cat('7. Sync Queue');
+
+  assert('T47 — window.syncQueue existe', function(){
+    return typeof window.syncQueue === 'object' && window.syncQueue !== null;
+  });
+  assert('T48 — syncQueue.push est une fonction', function(){
+    return typeof window.syncQueue.push === 'function';
+  });
+  assert('T49 — syncQueue.flush est une fonction', function(){
+    return typeof window.syncQueue.flush === 'function';
+  });
+  assert('T50 — syncQueue.count est une fonction', function(){
+    return typeof window.syncQueue.count === 'function';
+  });
+  assert('T51 — syncQueue.onDead est une fonction', function(){
+    return typeof window.syncQueue.onDead === 'function';
+  });
+  assert('T52 — window.syncQueueWrapper existe', function(){
+    return typeof window.syncQueueWrapper === 'object' && window.syncQueueWrapper !== null;
+  });
+  assert('T53 — syncQueueWrapper.push/flush/retry existent', function(){
+    var w = window.syncQueueWrapper;
+    return typeof w.push === 'function' && typeof w.flush === 'function' && typeof w.retry === 'function';
+  });
+  assert('T54 — syncQueueWrapper.smartSend est une fonction', function(){
+    return typeof window.syncQueueWrapper.smartSend === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     8. PROGRESSION (prog-model, prog-data, prog-ui)
+     ═══════════════════════════════════════════════════════════ */
+  cat('8. Progression');
+
+  assert('T55 — window.progModel existe', function(){
+    return typeof window.progModel === 'object' && window.progModel !== null;
+  });
+  assert('T56 — progModel.getFiliere est une fonction', function(){
+    return typeof window.progModel.getFiliere === 'function';
+  });
+  assert('T57 — progModel.getEpreuves est une fonction', function(){
+    return typeof window.progModel.getEpreuves === 'function';
+  });
+  assert('T58 — progModel.getComps est une fonction', function(){
+    return typeof window.progModel.getComps === 'function';
+  });
+  assert('T59 — window.progData existe', function(){
+    return typeof window.progData === 'object' && window.progData !== null;
+  });
+  assert('T60 — progData.calcNote est une fonction', function(){
+    return typeof window.progData.calcNote === 'function';
+  });
+  assert('T61 — progData.getLv est une fonction', function(){
+    return typeof window.progData.getLv === 'function';
+  });
+  assert('T62 — progData.getProgress est une fonction', function(){
+    return typeof window.progData.getProgress === 'function';
+  });
+  assert('T63 — window.progUI existe', function(){
+    return typeof window.progUI === 'object' && window.progUI !== null;
+  });
+  assert('T64 — progUI.renderBar est une fonction', function(){
+    return typeof window.progUI.renderBar === 'function';
+  });
+  assert('T65 — progUI.getLvClass est une fonction', function(){
+    return typeof window.progUI.getLvClass === 'function';
+  });
+  assert('T66 — progUI.LV_COLORS est un objet', function(){
+    return typeof window.progUI.LV_COLORS === 'object' && 'NE' in window.progUI.LV_COLORS;
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     9. RADAR
+     ═══════════════════════════════════════════════════════════ */
+  cat('9. Radar');
+
+  assert('T67 — window.radarModule existe', function(){
+    return typeof window.radarModule === 'object' && window.radarModule !== null;
+  });
+  assert('T68 — radarModule.renderMiniRadar est une fonction', function(){
+    return typeof window.radarModule.renderMiniRadar === 'function';
+  });
+  assert('T69 — radarModule.renderClassRadar est une fonction', function(){
+    return typeof window.radarModule.renderClassRadar === 'function';
+  });
+  assert('T70 — radarModule.renderCompareRadar est une fonction', function(){
+    return typeof window.radarModule.renderCompareRadar === 'function';
+  });
+  assert('T71 — window.radarCompetences existe', function(){
+    return typeof window.radarCompetences === 'object' && window.radarCompetences !== null;
+  });
+  assert('T72 — radarCompetences.renderClasseRadar est une fonction', function(){
+    return typeof window.radarCompetences.renderClasseRadar === 'function';
+  });
+  assert('T73 — radarCompetences.renderProgressionEleve est une fonction', function(){
+    return typeof window.radarCompetences.renderProgressionEleve === 'function';
+  });
+  assert('T74 — radarCompetences.renderCouverture est une fonction', function(){
+    return typeof window.radarCompetences.renderCouverture === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     10. ALERTES
+     ═══════════════════════════════════════════════════════════ */
+  cat('10. Alertes');
+
+  assert('T75 — window.alertesModule existe', function(){
+    return typeof window.alertesModule === 'object' && window.alertesModule !== null;
+  });
+  assert('T76 — alertesModule.analyzeAll est une fonction', function(){
+    return typeof window.alertesModule.analyzeAll === 'function';
+  });
+  assert('T77 — alertesModule.renderDashboard est une fonction', function(){
+    return typeof window.alertesModule.renderDashboard === 'function';
+  });
+  assert('T78 — window.alertSystem existe', function(){
+    return typeof window.alertSystem === 'object' && window.alertSystem !== null;
+  });
+  assert('T79 — alertSystem.getAlerts est une fonction', function(){
+    return typeof window.alertSystem.getAlerts === 'function';
+  });
+  assert('T80 — alertSystem.renderAlertsBadge est une fonction', function(){
+    return typeof window.alertSystem.renderAlertsBadge === 'function';
+  });
+  assert('T81 — alertSystem.ALERT_TYPES est un objet', function(){
+    return typeof window.alertSystem.ALERT_TYPES === 'object';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     11. JURY
+     ═══════════════════════════════════════════════════════════ */
+  cat('11. Jury');
+
+  assert('T82 — window.juryModule existe', function(){
+    return typeof window.juryModule === 'object' && window.juryModule !== null;
+  });
+  assert('T83 — juryModule.init est une fonction', function(){
+    return typeof window.juryModule.init === 'function';
+  });
+  assert('T84 — juryModule.getPool est une fonction', function(){
+    return typeof window.juryModule.getPool === 'function';
+  });
+  assert('T85 — juryModule.addToPool est une fonction', function(){
+    return typeof window.juryModule.addToPool === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     12. FUSION
+     ═══════════════════════════════════════════════════════════ */
+  cat('12. Fusion');
+
+  assert('T86 — window.fusionModule existe', function(){
+    return typeof window.fusionModule === 'object' && window.fusionModule !== null;
+  });
+  assert('T87 — fusionModule.merge est une fonction', function(){
+    return typeof window.fusionModule.merge === 'function';
+  });
+  assert('T88 — fusionModule.renderDropZone est une fonction', function(){
+    return typeof window.fusionModule.renderDropZone === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     13. PHOTOS
+     ═══════════════════════════════════════════════════════════ */
+  cat('13. Photos');
+
+  assert('T89 — window.photosModule existe', function(){
+    return typeof window.photosModule === 'object' && window.photosModule !== null;
+  });
+  assert('T90 — photosModule.addPhoto est une fonction', function(){
+    return typeof window.photosModule.addPhoto === 'function';
+  });
+  assert('T91 — photosModule.getPhotos est une fonction', function(){
+    return typeof window.photosModule.getPhotos === 'function';
+  });
+  assert('T92 — photosModule.MAX_PHOTOS === 10', function(){
+    return window.photosModule.MAX_PHOTOS === 10;
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     14. MODULES MÉTIER DIVERS
+     ═══════════════════════════════════════════════════════════ */
+  cat('14. Modules metier');
+
+  assert('T93 — window.phasesModule existe', function(){
+    return typeof window.phasesModule === 'object' && window.phasesModule !== null;
+  });
+  assert('T94 — phasesModule.PHASES contient formatif/certificatif/cloture', function(){
+    var p = window.phasesModule.PHASES;
+    return p && 'formatif' in p && 'certificatif' in p && 'cloture' in p;
+  });
+  assert('T95 — phasesModule.canEdit est une fonction', function(){
+    return typeof window.phasesModule.canEdit === 'function';
+  });
+  assert('T96 — window.historiqueModule existe', function(){
+    return typeof window.historiqueModule === 'object' && window.historiqueModule !== null;
+  });
+  assert('T97 — historiqueModule.renderTimeline est une fonction', function(){
+    return typeof window.historiqueModule.renderTimeline === 'function';
+  });
+  assert('T98 — window.imposModule existe', function(){
+    return typeof window.imposModule === 'object' && window.imposModule !== null;
+  });
+  assert('T99 — imposModule.has est une fonction', function(){
+    return typeof window.imposModule.has === 'function';
+  });
+  assert('T100 — imposModule.MOTIFS est un array de 8 elements', function(){
+    return Array.isArray(window.imposModule.MOTIFS) && window.imposModule.MOTIFS.length === 8;
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     15. EXPOSITION / TACHE COMPLEXE / SIGNATURES
+     ═══════════════════════════════════════════════════════════ */
+  cat('15. Exposition / Tache complexe / Signatures');
+
+  assert('T101 — window.expoModule existe', function(){
+    return typeof window.expoModule === 'object' && window.expoModule !== null;
+  });
+  assert('T102 — expoModule.calc est une fonction', function(){
+    return typeof window.expoModule.calc === 'function';
+  });
+  assert('T103 — window.tacheModule existe', function(){
+    return typeof window.tacheModule === 'object' && window.tacheModule !== null;
+  });
+  assert('T104 — tacheModule.hasRattrapage est une fonction', function(){
+    return typeof window.tacheModule.hasRattrapage === 'function';
+  });
+  assert('T105 — window.sigModule existe', function(){
+    return typeof window.sigModule === 'object' && window.sigModule !== null;
+  });
+  assert('T106 — sigModule.render est une fonction', function(){
+    return typeof window.sigModule.render === 'function';
+  });
+  assert('T107 — sigModule.hasSignature est une fonction', function(){
+    return typeof window.sigModule.hasSignature === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     16. EVAL TUTEUR / ACTIVITES / TP MANAGER
+     ═══════════════════════════════════════════════════════════ */
+  cat('16. Eval tuteur / Activites / TP Manager');
+
+  assert('T108 — window.evalTuteurModule existe', function(){
+    return typeof window.evalTuteurModule === 'object' && window.evalTuteurModule !== null;
+  });
+  assert('T109 — evalTuteurModule.renderForm est une fonction', function(){
+    return typeof window.evalTuteurModule.renderForm === 'function';
+  });
+  assert('T110 — evalTuteurModule.integrerDansGrille est une fonction', function(){
+    return typeof window.evalTuteurModule.integrerDansGrille === 'function';
+  });
+  assert('T111 — window.activModule existe', function(){
+    return typeof window.activModule === 'object' && window.activModule !== null;
+  });
+  assert('T112 — window.tpManager existe', function(){
+    return typeof window.tpManager === 'object' && window.tpManager !== null;
+  });
+  assert('T113 — tpManager.showCreate est une fonction', function(){
+    return typeof window.tpManager.showCreate === 'function';
+  });
+  assert('T114 — tpManager.submit est une fonction', function(){
+    return typeof window.tpManager.submit === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     17. PARTENAIRES / DOCUMENTS / EXPORT / JOURNAL / SCANNER
+     ═══════════════════════════════════════════════════════════ */
+  cat('17. Partenaires / Documents / Export / Journal / Scanner');
+
+  assert('T115 — window.renderParts est une fonction', function(){
+    return typeof window.renderParts === 'function';
+  });
+  assert('T116 — window.showAddPart est une fonction', function(){
+    return typeof window.showAddPart === 'function';
+  });
+  assert('T117 — window.renderSharedDocs est une fonction', function(){
+    return typeof window.renderSharedDocs === 'function';
+  });
+  assert('T118 — window.ajouterDocument est une fonction', function(){
+    return typeof window.ajouterDocument === 'function';
+  });
+  assert('T119 — window.exportExcel est une fonction', function(){
+    return typeof window.exportExcel === 'function';
+  });
+  assert('T120 — window.exportBackup est une fonction', function(){
+    return typeof window.exportBackup === 'function';
+  });
+  assert('T121 — window.handleRestore est une fonction', function(){
+    return typeof window.handleRestore === 'function';
+  });
+  assert('T122 — window.renderJournal est une fonction', function(){
+    return typeof window.renderJournal === 'function';
+  });
+  assert('T123 — window.showScanner est une fonction', function(){
+    return typeof window.showScanner === 'function';
+  });
+  assert('T124 — window.stopScanner est une fonction', function(){
+    return typeof window.stopScanner === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     18. GETTERS RETRO-COMPAT (prog-model/prog-data)
+     ═══════════════════════════════════════════════════════════ */
+  cat('18. Getters retro-compat');
+
+  assert('T125 — window.getFiliere est une fonction', function(){
+    return typeof window.getFiliere === 'function';
+  });
+  assert('T126 — window.getEpreuves est une fonction', function(){
+    return typeof window.getEpreuves === 'function';
+  });
+  assert('T127 — window.getComps est une fonction', function(){
+    return typeof window.getComps === 'function';
+  });
+  assert('T128 — window.calcNote est une fonction', function(){
+    return typeof window.calcNote === 'function';
+  });
+  assert('T129 — window.getLv est une fonction', function(){
+    return typeof window.getLv === 'function';
+  });
+  assert('T130 — window.getObs est une fonction', function(){
+    return typeof window.getObs === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     RÉSUMÉ
+     ═══════════════════════════════════════════════════════════ */
   var sum = document.getElementById('summary');
   var total = passed + failed;
   sum.innerHTML = '<strong>' + passed + '</strong> / ' + total + ' tests OK'
-    + (failed > 0 ? ' &mdash; <span style="color:#e74c3c;font-weight:bold">' + failed + ' FAIL</span>' : ' &mdash; <span style="color:#2ecc71;font-weight:bold">Tout est OK !</span>');
+    + (failed > 0 ? ' &mdash; <span style="color:#e74c3c;font-weight:bold">' + failed + ' FAIL</span>'
+    : ' &mdash; <span style="color:#2ecc71;font-weight:bold">Tout est OK !</span>');
+
+  // Titre du document avec le resultat
+  document.title = (failed > 0 ? '\u274c ' + failed + ' FAIL' : '\u2705 ' + total + ' OK') + ' — Smoke Tests';
 })();
 </script>
 

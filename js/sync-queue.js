@@ -336,7 +336,6 @@ window.syncQueue = (function () {
       await _removeFromDB(bi.id).catch(function () {});
     }
     if (beaconItems.length > 0) {
-      console.log('[syncQueue] ' + beaconItems.length + ' item(s) beacon récent(s) dédupliqué(s)');
     }
 
     _updateBadge();
@@ -351,12 +350,10 @@ window.syncQueue = (function () {
     window.removeEventListener('online', _onOnline);
     window.addEventListener('online', _onOnline);
 
-    console.log('[syncQueue] Initialisé — ' + _queue.length + ' action(s) en attente');
   }
 
   /** Handler nommé pour l'événement 'online' (FIX #5) */
   function _onOnline() {
-    console.log('[syncQueue] Réseau retrouvé, flush immédiat');
     _processQueue();
   }
 

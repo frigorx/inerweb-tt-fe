@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>inerWeb TT — Tuteur</title>
+<title>INERWEB PROG+ — Tuteur</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -300,7 +300,7 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
         <div class="ib-title">✅ Simple et rapide</div>
         Pas besoin de créer un compte. Scannez le badge de votre stagiaire, évaluez ce que vous observez, et c'est transmis à l'enseignant automatiquement.
       </div>
-      <button class="btn btn-teal" onclick="goPage('entreprise')" style="margin-top:.5rem">Commencer → Présenter l'entreprise 🏢</button>
+      <button class="btn btn-teal" data-page="entreprise" style="margin-top:.5rem">Commencer → Présenter l'entreprise 🏢</button>
     </div>
 
   </div>
@@ -341,7 +341,7 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
       </div>
 
       <button class="btn btn-teal" style="margin-top:.75rem" onclick="goToTuteurs()">Suivant → Tuteur(s) de stage 👤</button>
-      <button class="btn btn-ghost" style="margin-top:.5rem" onclick="goPage('bienvenue')">← Retour</button>
+      <button class="btn btn-ghost" data-page="bienvenue" style="margin-top:.5rem">← Retour</button>
     </div>
   </div>
 </div>
@@ -362,7 +362,7 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
       <div id="tuteurList"></div>
       <button class="btn-add" onclick="addTuteur()">＋ Ajouter un tuteur</button>
       <button class="btn btn-teal" style="margin-top:.75rem" onclick="goToScan()">Suivant → Scanner le stagiaire 📱</button>
-      <button class="btn btn-ghost" style="margin-top:.5rem" onclick="goPage('entreprise')">← Retour</button>
+      <button class="btn btn-ghost" data-page="entreprise" style="margin-top:.5rem">← Retour</button>
     </div>
   </div>
 </div>
@@ -401,7 +401,7 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
         <button class="btn btn-ghost" onclick="chargerEleveManuel()">Charger le stagiaire</button>
       </div>
     </div>
-    <button class="btn btn-ghost" onclick="goPage('tuteurs')">← Retour</button>
+    <button class="btn btn-ghost" data-page="tuteurs">← Retour</button>
   </div>
 </div>
 
@@ -421,7 +421,7 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
     <div class="card" style="padding:.75rem 1rem">
       <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
         <div style="font-size:.8rem;font-weight:800;color:var(--bleu)">Période :</div>
-        <select id="selPfmp" onchange="renderEval()" style="padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:var(--r2);font-weight:700;font-size:.82rem;">
+        <select id="selPfmp" data-filter="eval" style="padding:.4rem .6rem;border:2px solid var(--gris3);border-radius:var(--r2);font-weight:700;font-size:.82rem;">
           <option value="pfmp1">PFMP 1</option>
           <option value="pfmp2">PFMP 2</option>
         </select>
@@ -532,7 +532,7 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
     </div>
 
     <button class="btn btn-vert" onclick="envoyer()" style="margin-bottom:.5rem">📤 Envoyer l'évaluation à l'enseignant</button>
-    <button class="btn btn-ghost" onclick="goPage('scan')" style="margin-bottom:1rem">📱 Évaluer un autre stagiaire</button>
+    <button class="btn btn-ghost" data-page="scan" style="margin-bottom:1rem">📱 Évaluer un autre stagiaire</button>
 
     <!-- Documents partagés -->
     <div class="card" id="tuteurDocsCard" style="border-top:3px solid var(--teal);display:none">
@@ -866,8 +866,20 @@ async function chargerEleve(code,token){
     eleveData=d.eleve;
     // Charger évaluations tuteur existantes si présentes
     if(d.evalTuteur&&d.evalTuteur.length){
-      // TODO: pré-remplir evalData avec les données existantes
+      // Pré-remplir evalData avec les données existantes
+      d.evalTuteur.forEach(ev=>{
+        if(ev.competence&&ev.niveau!=null){
+          evalData[ev.competence]=ev.niveau;
+        }
+      });
     }
+    // Charger aussi depuis localStorage si disponible
+    try{
+      const saved=JSON.parse(localStorage.getItem('evalData_'+code));
+      if(saved&&typeof saved==='object'){
+        Object.keys(saved).forEach(k=>{if(!(k in evalData))evalData[k]=saved[k];});
+      }
+    }catch(e){}
   }catch(e){
     // Mode hors-ligne — on permet la saisie locale
     eleveCode=code;
@@ -1123,14 +1135,15 @@ async function envoyerConfirme(){
 
   showSpinner();
   try{
-    // ⚠️ SÉCURITÉ : On utilise le token TUTEUR, pas la clé prof
-    const p=new URLSearchParams({
-      action:'saveEvalTuteur',
-      eleve:eleveCode,
-      tuteur:tuteurToken,
-      data:JSON.stringify(payload)
+    // ⚠️ SÉCURITÉ : POST — token dans le body, pas dans l'URL
+    const url=new URL(API_URL);
+    url.searchParams.set('action','saveEvalTuteur');
+    const r=await fetch(url.toString(),{
+      method:'POST',
+      redirect:'follow',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({eleve:eleveCode,tuteur:tuteurToken,data:JSON.stringify(payload)})
     });
-    const r=await fetch(`${API_URL}?${p}`,{redirect:'follow'});
     const d=await r.json();
     if(d.error){
       throw new Error(d.error);
@@ -1142,9 +1155,11 @@ async function envoyerConfirme(){
     },1500);
   }catch(e){
     hideSpinner();
-    // Sauvegarder en local pour envoi ultérieur
+    // Sauvegarder en local pour envoi ultérieur (anti-doublon par élève)
     const pending=safeParse(localStorage.getItem('inerweb-tt-fe-tuteur-pending'),[]);
-    pending.push({eleve:eleveCode,tuteur:tuteurToken,payload});
+    const existIdx=pending.findIndex(function(p){return p.eleve===eleveCode;});
+    if(existIdx>=0){pending[existIdx]={eleve:eleveCode,tuteur:tuteurToken,payload};}
+    else{pending.push({eleve:eleveCode,tuteur:tuteurToken,payload});}
     localStorage.setItem('inerweb-tt-fe-tuteur-pending',JSON.stringify(pending));
     toast('Sauvegardé hors-ligne — envoi au prochain réseau','warn');
   }
@@ -1237,11 +1252,56 @@ function loadTuteurDemo(){
   document.body.appendChild(banner);
 }
 
+/* ═══ RETRY PENDING — Renvoi automatique des évaluations en attente ═══ */
+async function retryPending(){
+  var pending=safeParse(localStorage.getItem('inerweb-tt-fe-tuteur-pending'),[]);
+  if(!pending.length) return;
+  var restant=[];
+  for(var i=0;i<pending.length;i++){
+    try{
+      var p=pending[i];
+      var url=new URL(API_URL);
+      url.searchParams.set('action','saveEvalTuteur');
+      var r=await fetch(url.toString(),{
+        method:'POST',
+        redirect:'follow',
+        headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify({eleve:p.eleve,tuteur:p.tuteur,data:JSON.stringify(p.payload)})
+      });
+      var d=await r.json();
+      if(d.error) throw new Error(d.error);
+      toast('Évaluation en attente envoyée pour '+p.eleve,'ok');
+    }catch(e){
+      restant.push(pending[i]);
+    }
+  }
+  localStorage.setItem('inerweb-tt-fe-tuteur-pending',JSON.stringify(restant));
+  if(restant.length) toast(restant.length+' évaluation(s) en attente de connexion','warn');
+}
+
+// Retry automatique au retour en ligne
+window.addEventListener('online',function(){ retryPending(); });
+
+/* ═══ EVENT LISTENERS DELEGUES (Phase 11) ═══ */
+// Navigation par pages — délégation sur le body
+document.body.addEventListener('click',function(e){
+  var btn=e.target.closest('[data-page]');
+  if(btn)goPage(btn.dataset.page);
+});
+// Filtres select — délégation sur le body
+document.body.addEventListener('change',function(e){
+  var sel=e.target.closest('[data-filter]');
+  if(!sel)return;
+  if(sel.dataset.filter==='eval')renderEval();
+});
+
 /* ═══ INIT ═══ */
 // Ajouter champs par défaut
 addTel();addEmail();addTuteur();
 // Charger données sauvegardées
 chargerLocal();
+// Retry des évaluations en attente au chargement
+if(navigator.onLine) retryPending();
 // Deep-link
 const _p=new URLSearchParams(window.location.search);
 
