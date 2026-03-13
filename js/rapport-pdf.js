@@ -397,7 +397,7 @@ window.rapportModule = (function () {
 
   function generate() {
     var jsPDF = (window.jspdf || {}).jsPDF;
-    if (!jsPDF) { alert('jsPDF non disponible'); return; }
+    if (!jsPDF) { if(typeof toast==='function')toast('jsPDF non disponible','err');return; }
 
     // FIX #7 : try/catch global pour éviter la perte totale en cas d'erreur
     try {
@@ -416,7 +416,7 @@ window.rapportModule = (function () {
       if (typeof toast === 'function') {
         toast('Erreur lors de la génération du rapport PDF', 'err');
       } else {
-        alert('Erreur lors de la génération du rapport PDF : ' + (err.message || err));
+        if(typeof toast==='function')toast('Erreur génération rapport PDF','err');
       }
     }
   }
@@ -427,10 +427,10 @@ window.rapportModule = (function () {
 
   function generateStudentPDF(code) {
     var jsPDF = (window.jspdf || {}).jsPDF;
-    if (!jsPDF) { alert('jsPDF non disponible'); return; }
+    if (!jsPDF) { if(typeof toast==='function')toast('jsPDF non disponible','err');return; }
 
     var s = (window.students || []).find(function (e) { return e.code === code; });
-    if (!s) { alert('\u00c9l\u00e8ve introuvable'); return; }
+    if (!s) { if(typeof toast==='function')toast('Élève introuvable','err');return; }
 
     // FIX #7 : try/catch global
     try {
@@ -796,7 +796,7 @@ window.rapportModule = (function () {
       if (typeof toast === 'function') {
         toast('Erreur lors de la génération du PDF élève', 'err');
       } else {
-        alert('Erreur lors de la génération du PDF : ' + (err.message || err));
+        if(typeof toast==='function')toast('Erreur génération PDF élève','err');
       }
     }
   }
