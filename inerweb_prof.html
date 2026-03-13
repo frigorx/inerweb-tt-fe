@@ -108,6 +108,7 @@ body.show-app #screen-app{display:flex;}
 .nav-btn.active{color:var(--bleu);background:var(--bleu3);font-weight:900;}
 .nav-btn.active::after{content:'';position:absolute;bottom:0;left:5%;right:5%;height:3.5px;background:var(--orange);border-radius:4px 4px 0 0;}
 .nav-badge{position:absolute;top:.35rem;right:calc(50% - 1.3rem);background:var(--rouge);color:#fff;font-size:.55rem;font-weight:800;min-width:16px;height:16px;border-radius:8px;padding:0 .3rem;display:flex;align-items:center;justify-content:center;}
+.nav-sep{width:1px;height:40px;background:var(--gris3);margin:12px .15rem;flex-shrink:0;}
 
 /* [5] Cards & composants */
 .card{background:#fff;border-radius:var(--r);padding:1.1rem 1.15rem;box-shadow:var(--ombre2);margin-bottom:.85rem;}
@@ -152,7 +153,7 @@ body.show-app #screen-app{display:flex;}
 .stat-card:hover{transform:translateY(-3px);box-shadow:var(--ombre);}
 .stat-card:nth-child(1){border-bottom-color:var(--bleu);}.stat-card:nth-child(2){border-bottom-color:var(--rouge);}.stat-card:nth-child(3){border-bottom-color:var(--vert);}.stat-card:nth-child(4){border-bottom-color:var(--teal);}
 .stat-num{font-size:2rem;font-weight:900;line-height:1;}
-.stat-lbl{font-size:.65rem;font-weight:800;color:var(--gris);text-transform:uppercase;letter-spacing:.3px;margin-top:.3rem;}
+.stat-lbl{font-size:.72rem;font-weight:800;color:var(--bleu);text-transform:uppercase;letter-spacing:.3px;margin-top:.3rem;}
 .student-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.6rem;}
 .sc{background:#fff;border-radius:var(--r);padding:1rem;cursor:pointer;box-shadow:var(--ombre2);transition:var(--t);border-left:4px solid transparent;display:flex;flex-direction:column;gap:.15rem;}
 .sc:hover{transform:translateY(-2px);box-shadow:var(--ombre);border-left-color:var(--bleu2);}
@@ -170,7 +171,7 @@ body.show-app #screen-app{display:flex;}
 .sc .sc-actions{border-top:1px solid var(--gris3);padding-top:.45rem;margin-top:.25rem;}
 
 /* Filtres stylés */
-.filter-bar{display:flex;gap:.4rem;margin-bottom:.65rem;flex-wrap:wrap;align-items:center;padding:.45rem .65rem;background:#fff;border-radius:var(--r2);box-shadow:var(--ombre2);}
+.filter-bar{display:flex;gap:.4rem;margin-bottom:.65rem;flex-wrap:wrap;align-items:center;padding:.55rem .75rem;background:#fff;border-radius:var(--r2);box-shadow:0 4px 12px rgba(27,58,99,.12);border-top:3px solid var(--bleu);}
 .filter-bar label{font-size:.72rem;font-weight:700;color:var(--gris);white-space:nowrap;}
 .filter-bar select{padding:.3rem .5rem;border:1.5px solid var(--gris3);border-radius:6px;font-size:.76rem;font-weight:600;background:#fff;transition:var(--t);}
 .filter-bar select:focus{border-color:var(--bleu2);outline:none;}
@@ -426,15 +427,18 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
     </div>
   </header>
 
-  <nav class="top-nav">
+  <nav class="top-nav" role="navigation" aria-label="Navigation principale">
     <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="ni">🏠</span>Tableau</button>
     <button class="nav-btn" data-tab="eleves" onclick="switchTab('eleves')"><span class="ni">👥</span>Élèves</button>
+    <div class="nav-sep"></div>
     <button class="nav-btn" data-tab="activites" onclick="switchTab('activites')"><span class="ni">📋</span>Activités</button>
     <button class="nav-btn" data-tab="progression" onclick="switchTab('progression')"><span class="ni">📅</span>Progression</button>
     <button class="nav-btn" data-tab="stage" onclick="switchTab('stage')"><span class="ni">🏢</span>Stage</button>
+    <div class="nav-sep"></div>
     <button class="nav-btn" data-tab="bilan" onclick="switchTab('bilan')"><span class="ni">🏆</span>Bilan</button>
     <button class="nav-btn" data-tab="rapport" onclick="switchTab('rapport')"><span class="ni">📝</span>Rapport</button>
     <button class="nav-btn" data-tab="export" onclick="switchTab('export')"><span class="ni">📤</span>Export</button>
+    <div class="nav-sep"></div>
     <button class="nav-btn" data-tab="config" onclick="switchTab('config')"><span class="ni">⚙️</span>Config</button>
     <button class="nav-btn" data-tab="admin" onclick="switchTab('admin')" id="navAdmin" style="display:none"><span class="ni">👑</span>Admin</button>
     <!-- E31/E32 tab-pane gardés mais accessibles via Activités uniquement -->
@@ -443,7 +447,7 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
     <button class="nav-btn" data-tab="e33" onclick="switchTab('e33')" style="display:none"><span class="ni">📋</span>E33</button>
   </nav>
 
-  <main class="main-content">
+  <main class="main-content" role="main">
 
     <!-- DASHBOARD -->
     <div class="tab-pane active" id="tab-dashboard"><div class="tab-inner">
@@ -979,7 +983,7 @@ body.demo-mode::after{content:'MODE DÉMO';position:fixed;top:56px;left:50%;tran
   <div class="modal-box"><div class="modal-title" id="modalTitle"></div><div id="modalBody"></div><div class="modal-act" id="modalAct"></div></div>
 </div>
 <div class="spin-ov" id="spinOv"><div class="spinner"></div></div>
-<div class="toast-c" id="toastC"></div>
+<div class="toast-c" id="toastC" aria-live="polite"></div>
 
 <script>
 /* RADIOGUIDAGE JS
@@ -1438,11 +1442,10 @@ async function apiCall(params){
   const isWrite=WRITE_ACTIONS.includes(params.action);
   let r;
   if(isWrite){
-    // POST pour les écritures (données sensibles hors URL)
+    // POST pour les écritures (clé + données dans le body, pas dans l'URL)
     const url=new URL(cfg.apiUrl);
     url.searchParams.set('action',params.action);
-    url.searchParams.set('key',params.key);
-    const body={};
+    const body={key:params.key};
     Object.entries(params).forEach(([k,v])=>{if(k!=='action'&&k!=='key')body[k]=v;});
     r=await fetch(url.toString(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
   }else{
@@ -1700,7 +1703,7 @@ function populateClassFilters() {
       cls.map(c => {
         const fil = getFiliere({classe: c});
         const color = FILIERES[fil]?.couleur || '#6c757d';
-        return `<option value="${c}" style="color:${color}">${c}</option>`;
+        return `<option value="${esc(c)}" style="color:${color}">${esc(c)}</option>`;
       }).join('');
     // Restaurer ou sélectionner la 1ère classe
     if (prev && cls.includes(prev)) dashSel.value = prev;
@@ -1714,7 +1717,7 @@ function populateClassFilters() {
       cls.map(c => {
         const fil = getFiliere({classe: c});
         const color = FILIERES[fil]?.couleur || '#6c757d';
-        return `<option value="${c}" style="color:${color}">${c}</option>`;
+        return `<option value="${esc(c)}" style="color:${color}">${esc(c)}</option>`;
       }).join('');
     filtSel.value = prev;
   }
@@ -1827,7 +1830,7 @@ function renderDash(){
       <div class="sc-bot" style="flex-wrap:wrap;gap:.2rem">
         <span>🕐 ${s.derniere_eval?dateFR(s.derniere_eval):'—'}</span>
         <span style="font-size:.62rem;color:var(--bleu)">📋${nbActs}</span>
-        ${alerte?`<span class="sc-alerte">⚠️ ${s.alerte}</span>`:journalAlert?`<span class="sc-alerte">📓 ${daysSinceJournal}j</span>`:''}
+        ${alerte?`<span class="sc-alerte">⚠️ ${esc(s.alerte)}</span>`:journalAlert?`<span class="sc-alerte">📓 ${daysSinceJournal}j</span>`:''}
       </div>
       <div class="sc-actions" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center" onclick="event.stopPropagation()">
         <button class="btn btn-ghost btn-xs" onclick="previewPageEleve('${s.code}')" title="Voir page élève">👁️E</button>
@@ -1962,7 +1965,7 @@ function compBlock(comp,ep,ctx){
         ${lockBtn}
       </div>
       <div class="comp-global"><span class="cg-lbl">Niveau global :</span><div class="gb-wrap">${gbBtns}</div></div>
-      <textarea class="obs-area" placeholder="Observation sur ${comp.code}..." rows="2" ${isLocked?'disabled':''} onblur="saveObs('${comp.code}','${ep}',this.value)">${obs}</textarea>
+      <textarea class="obs-area" placeholder="Observation sur ${comp.code}..." rows="2" ${isLocked?'disabled':''} onblur="saveObs('${comp.code}','${ep}',this.value)">${esc(obs)}</textarea>
     </div>
   </div>`;
 }
@@ -2286,9 +2289,7 @@ async function profHandlePhoto(files,code){
   // Sync si possible
   if(cfg.apiUrl&&cfg.apiKey){
     try{
-      const p=new URLSearchParams({action:'addJournalEntry',key:cfg.apiKey,eleve:code,entry:JSON.stringify(entry)});
-      const r=await fetch(`${cfg.apiUrl}?${p}`,{redirect:'follow'});
-      const d=await r.json();
+      const d=await apiCall({action:'addJournalEntry',eleve:code,entry:JSON.stringify(entry)});
       if(d.ok)entry.synced=true;
       saveLocal();
     }catch(e){console.warn('Sync photo prof:',e);}
@@ -2349,7 +2350,7 @@ function viewJournalDetail(code){
         ${entries.map(e=>{
           const photosHtml=e.photos?.length?`<div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.5rem">${e.photos.map((p,i)=>`<img src="${esc(p)}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer" onclick="window.open(this.src,'_blank')" title="Clic pour agrandir">`).join('')}</div>`:'';
           return `<div style="padding:.5rem;background:#fff;border-radius:var(--r2);margin-bottom:.4rem;border-left:3px solid var(--violet)">
-            <div style="font-size:.7rem;color:var(--gris)">${new Date(e.date||e.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} <span style="background:var(--violet2);color:var(--violet);padding:.1rem .3rem;border-radius:3px;font-weight:700">${TYPE_LBL[e.type]||e.type||'—'}</span></div>
+            <div style="font-size:.7rem;color:var(--gris)">${new Date(e.date||e.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} <span style="background:var(--violet2);color:var(--violet);padding:.1rem .3rem;border-radius:3px;font-weight:700">${TYPE_LBL[e.type]||esc(e.type||'—')}</span></div>
             ${e.text||e.description||e.activite?`<div style="font-size:.85rem;margin-top:.3rem">${esc(e.text||e.description||e.activite)}</div>`:''}
             ${photosHtml}
           </div>`;
@@ -2383,7 +2384,7 @@ function renderTuteurEvalDetail(code,data){
   const s=students.find(x=>x.code===code)||{};
   const c=document.getElementById('tuteurEvalContenu');
   if(!data||(!data.competences&&!(data.validations?.length))){
-    c.innerHTML=`<div class="alert al-info">Aucune évaluation tuteur reçue pour ${s.nom} ${s.prenom||''}.<br><small>Le tuteur doit scanner le badge de l'élève sur inerweb_tuteur.html</small></div>`;
+    c.innerHTML=`<div class="alert al-info">Aucune évaluation tuteur reçue pour ${esc(s.nom)} ${esc(s.prenom||'')}.<br><small>Le tuteur doit scanner le badge de l'élève sur inerweb_tuteur.html</small></div>`;
     return;
   }
 
@@ -2462,10 +2463,10 @@ function showGuideTuteur(){
     </div>
     <div style="background:var(--teal2);border-radius:var(--r2);padding:1rem;margin-bottom:1rem">
       <div style="font-weight:800;color:var(--teal);margin-bottom:.5rem">📞 Contact enseignant</div>
-      <div style="font-size:.9rem"><strong>${eval1}</strong> — ${etab}</div>
+      <div style="font-size:.9rem"><strong>${esc(eval1)}</strong> — ${esc(etab)}</div>
       <div style="display:flex;gap:.75rem;margin-top:.5rem;flex-wrap:wrap">
-        <a href="tel:${tel}" style="color:var(--bleu);font-weight:700;text-decoration:none">📱 ${tel}</a>
-        <a href="mailto:${email}" style="color:var(--bleu);font-weight:700;text-decoration:none">✉️ ${email}</a>
+        <a href="tel:${esc(tel)}" style="color:var(--bleu);font-weight:700;text-decoration:none">📱 ${esc(tel)}</a>
+        <a href="mailto:${esc(email)}" style="color:var(--bleu);font-weight:700;text-decoration:none">✉️ ${esc(email)}</a>
       </div>
     </div>
     <p style="font-size:.8rem;color:var(--gris);text-align:center">
@@ -2535,7 +2536,7 @@ function renderComm(){
     return `<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem;background:var(--gris2);border-radius:var(--r2);margin-bottom:.3rem;">
       <div style="flex:1"><div style="font-weight:700;font-size:.8rem">${esc(s.nom)} ${esc(s.prenom||'')}</div><div style="font-size:.65rem;color:var(--gris)">${esc(s.tuteur_nom||'Tuteur non défini')}</div></div>
       <a class="btn btn-ghost btn-xs" href="https://wa.me/?text=${encodeURIComponent(m)}" target="_blank">💬 WA</a>
-      ${s.tuteur_email?`<a class="btn btn-ghost btn-xs" href="mailto:${s.tuteur_email}?subject=Stage%20${encodeURIComponent(s.nom)}&body=${encodeURIComponent(m)}">✉️</a>`:''}
+      ${s.tuteur_email?`<a class="btn btn-ghost btn-xs" href="mailto:${esc(s.tuteur_email)}?subject=Stage%20${encodeURIComponent(s.nom)}&body=${encodeURIComponent(m)}">✉️</a>`:''}
     </div>`;
   }).join('')||'<div class="alert al-warn">Aucun tuteur avec coordonnées</div>';
 }
@@ -2682,24 +2683,24 @@ function renderRapport(){
 
   c.innerHTML=`
     <div class="card" style="border-top:3px solid var(--bleu2)">
-      <div class="card-title">🔧 Évaluation prof de pro — ${s.nom} ${s.prenom||''}</div>
+      <div class="card-title">🔧 Évaluation prof de pro — ${esc(s.nom)} ${esc(s.prenom||'')}</div>
       ${makeGridPro(CRIT_RAPPORT_PRO,'pro')}
       <div class="fr" style="margin-top:.5rem;margin-bottom:0">
         <label>Observation prof de pro</label>
         <textarea id="obs_pro" rows="2" style="width:100%;padding:.5rem;border:2px solid var(--gris3);border-radius:var(--r2);font-size:.85rem"
           placeholder="Points forts, axes d'amélioration..."
-          oninput="rapportData['${cur}']['${pfmp}'].obs_pro=this.value">${d.obs_pro||''}</textarea>
+          oninput="rapportData['${cur}']['${pfmp}'].obs_pro=this.value">${esc(d.obs_pro||'')}</textarea>
       </div>
     </div>
     <div class="card" style="border-top:3px solid var(--violet)">
       <div class="card-title" style="color:var(--violet)">📖 Évaluation orale — Rapport de stage</div>
       <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap">
         <div style="font-size:.72rem;color:var(--gris)">Élève :</div>
-        <div style="font-weight:700;font-size:.82rem">${s.nom} ${s.prenom||''}</div>
+        <div style="font-weight:700;font-size:.82rem">${esc(s.nom)} ${esc(s.prenom||'')}</div>
         <div style="font-size:.72rem;color:var(--gris);margin-left:.5rem">Classe :</div>
-        <div style="font-weight:700;font-size:.82rem">${s.classe||'—'}</div>
+        <div style="font-weight:700;font-size:.82rem">${esc(s.classe||'—')}</div>
         <div style="font-size:.72rem;color:var(--gris);margin-left:.5rem">N° jury :</div>
-        <input type="text" value="${d.jury||''}" placeholder="—"
+        <input type="text" value="${esc(d.jury||'')}" placeholder="—"
           oninput="rapportData['${cur}']['${pfmp}'].jury=this.value"
           style="width:4rem;padding:.25rem .4rem;border:2px solid var(--gris3);border-radius:var(--r2);font-weight:700;font-size:.82rem;text-align:center">
       </div>
@@ -2712,7 +2713,7 @@ function renderRapport(){
         <label>Observation prof de français</label>
         <textarea id="obs_fr" rows="2" style="width:100%;padding:.5rem;border:2px solid var(--gris3);border-radius:var(--r2);font-size:.85rem"
           placeholder="Expression, argumentation, qualité de la langue..."
-          oninput="rapportData['${cur}']['${pfmp}'].obs_fr=this.value">${d.obs_fr||''}</textarea>
+          oninput="rapportData['${cur}']['${pfmp}'].obs_fr=this.value">${esc(d.obs_fr||'')}</textarea>
       </div>
     </div>
     <button class="btn btn-teal" onclick="sauverRapport()" style="margin-bottom:1rem">💾 Enregistrer l'évaluation rapport</button>`;
@@ -2756,7 +2757,7 @@ function toggleDocEleve(){
   wrap.style.display=vis==='profs'?'':'none';
   if(vis==='profs'){
     const sel=document.getElementById('docEleveCode');
-    sel.innerHTML='<option value="">— Aucun (document global) —</option>'+students.map(s=>`<option value="${s.code}">${s.nom} ${s.prenom||''}</option>`).join('');
+    sel.innerHTML='<option value="">— Aucun (document global) —</option>'+students.map(s=>`<option value="${esc(s.code)}">${esc(s.nom)} ${esc(s.prenom||'')}</option>`).join('');
   }
 }
 function docFileSelected(input){
@@ -2764,7 +2765,7 @@ function docFileSelected(input){
   if(input.files.length){
     const f=input.files[0];
     const sz=f.size<1024*1024?(Math.round(f.size/1024)+'Ko'):(Math.round(f.size/1024/1024*10)/10+'Mo');
-    info.innerHTML=`<strong>${f.name}</strong> — ${sz}`;
+    info.innerHTML=`<strong>${esc(f.name)}</strong> — ${sz}`;
   }else{info.innerHTML='';}
 }
 
@@ -2842,8 +2843,8 @@ function renderSharedDocs(){
         return `<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem .6rem;background:var(--gris2);border-radius:var(--r2);margin-bottom:.35rem">
           <span style="font-size:1.3rem">${ico}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.nom}</div>
-            <div style="font-size:.68rem;color:var(--gris)">${sz} · ${dt} · <span style="color:${DOC_VIS_COLORS[d.visibilite]||'var(--gris)'};font-weight:700">${DOC_VIS_LABELS[d.visibilite]||d.visibilite}</span>${d.eleveCode?` · 👤 ${(students.find(s=>s.code===d.eleveCode)||{}).nom||d.eleveCode}`:''}</div>
+            <div style="font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(d.nom)}</div>
+            <div style="font-size:.68rem;color:var(--gris)">${sz} · ${dt} · <span style="color:${DOC_VIS_COLORS[d.visibilite]||'var(--gris)'};font-weight:700">${DOC_VIS_LABELS[d.visibilite]||esc(d.visibilite)}</span>${d.eleveCode?` · 👤 ${esc((students.find(s=>s.code===d.eleveCode)||{}).nom||d.eleveCode)}`:''}</div>
           </div>
           <button class="btn btn-ghost btn-xs" onclick="telechargerDoc('${d.id}')" title="Télécharger">⬇️</button>
           <button class="btn btn-rouge btn-xs" onclick="supprimerDoc('${d.id}')" title="Supprimer">🗑️</button>
@@ -2861,7 +2862,7 @@ function renderBilan(){
   const n31=notes[cur]?.E31||{},n32=notes[cur]?.E32||{},n33=notes[cur]?.E33||{};
   c.innerHTML=`
   <div class="card">
-    <div class="card-title">🏆 Bilan — ${s.nom||''} ${s.prenom||''} <span style="font-size:.72rem;color:var(--gris);font-weight:600">${s.classe||''}</span></div>
+    <div class="card-title">🏆 Bilan — ${esc(s.nom||'')} ${esc(s.prenom||'')} <span style="font-size:.72rem;color:var(--gris);font-weight:600">${esc(s.classe||'')}</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.75rem">
       <div class="bn-card" style="border-top:4px solid var(--e31)">
         <div class="bn-lbl" style="color:var(--e31)">E31 — Réalisation (coeff 3)</div>
@@ -3055,7 +3056,7 @@ function renderEleves(){
         ${trk.streak?`<span style="font-size:.68rem;color:var(--orange);font-weight:700">🔥${trk.streak}</span>`:''}
       </div>`:'';
     return `<div class="el-row" style="border-left:3px solid ${alert.border}">
-    <div class="el-av">${(s.nom||'?')[0]}${s.prenom?s.prenom[0]:''}</div>
+    <div class="el-av">${esc((s.nom||'?')[0])}${s.prenom?esc(s.prenom[0]):''}</div>
     <div style="flex:1;cursor:pointer" onclick="goEval('${s.code}')">
       <div class="el-nom">${esc(s.nom)} ${esc(s.prenom)}</div>
       <div class="el-meta">${esc(s.classe)||'—'}${s.groupe?' · '+esc(s.groupe):''} · A${s.annee||1} · <span style="font-family:'JetBrains Mono',monospace;font-size:.65rem">${esc(s.code)}</span></div>
@@ -3123,7 +3124,7 @@ function showPromotion(){
   if(!a1.length){toast('Aucun élève en 1ère année','warn');return;}
   const rows=a1.map(s=>`<div style="display:flex;align-items:center;gap:.5rem;padding:.3rem .5rem;border-bottom:1px solid var(--gris3)">
     <input type="checkbox" class="promo-cb" value="${s.code}" id="promo-${s.code}">
-    <label for="promo-${s.code}" style="flex:1;font-size:.82rem;cursor:pointer"><strong>${s.nom}</strong> ${s.prenom||''} <span style="color:var(--gris);font-size:.7rem">${s.classe||''} ${s.groupe||''}</span></label>
+    <label for="promo-${s.code}" style="flex:1;font-size:.82rem;cursor:pointer"><strong>${esc(s.nom)}</strong> ${esc(s.prenom||'')} <span style="color:var(--gris);font-size:.7rem">${esc(s.classe||'')} ${esc(s.groupe||'')}</span></label>
   </div>`).join('');
   showModal('🎓 Promotion en 2ème année',`
     <div class="alert al-info" style="margin-bottom:.5rem;font-size:.78rem">Sélectionnez les élèves qui passent en 2ème année. Leurs données (évaluations, stages) seront conservées.</div>
@@ -3635,7 +3636,7 @@ function renderJournal(){
     (Array.isArray(vals)?vals:[]).forEach(v=>{if(v.epreuve&&v.competence&&v.niveau&&v.timestamp)all.push({...v,eNom:s?`${s.nom} ${s.prenom||''}`:code});});
   });
   all.sort((a,b)=>String(b.timestamp||'').localeCompare(String(a.timestamp||'')));
-  c.innerHTML=all.slice(0,50).map(j=>`<div class="jentry ${j.phase||''}"><span class="j-date">${dateFR(j.timestamp)}</span> · <strong style="color:var(--bleu2)">${j.eNom}</strong> · ${j.epreuve} ${j.competence} → <strong>${j.niveau}</strong></div>`).join('')||'<div class="alert al-info">Aucune action</div>';
+  c.innerHTML=all.slice(0,50).map(j=>`<div class="jentry ${esc(j.phase||'')}"><span class="j-date">${dateFR(j.timestamp)}</span> · <strong style="color:var(--bleu2)">${esc(j.eNom)}</strong> · ${esc(j.epreuve)} ${esc(j.competence)} → <strong>${esc(j.niveau)}</strong></div>`).join('')||'<div class="alert al-info">Aucune action</div>';
 }
 async function renderBackupList(){
   const c=document.getElementById('backupList');
@@ -3688,10 +3689,10 @@ function showParamModal(){
       </div>
     </div>
     <div style="font-weight:700;font-size:.8rem;color:var(--gris);margin-bottom:.3rem">Modifier les paramètres</div>
-    <div class="fr"><label>URL API</label><input id="pmUrl" value="${cfg.apiUrl||''}"></div>
-    <div class="fr" style="margin-top:.5rem"><label>Clé maître</label><input id="pmKey" value="${cfg.apiKey||''}"></div>
-    <div class="fr" style="margin-top:.5rem"><label>Votre nom</label><input id="pmNom" value="${cfg.nomProf||''}"></div>
-    <div class="fr" style="margin-top:.5rem"><label>URL GitHub Pages</label><input id="pmBase" value="${cfg.baseUrl||''}"></div>`,
+    <div class="fr"><label>URL API</label><input id="pmUrl" value="${esc(cfg.apiUrl||'')}"></div>
+    <div class="fr" style="margin-top:.5rem"><label>Clé maître</label><input id="pmKey" value="${esc(cfg.apiKey||'')}"></div>
+    <div class="fr" style="margin-top:.5rem"><label>Votre nom</label><input id="pmNom" value="${esc(cfg.nomProf||'')}"></div>
+    <div class="fr" style="margin-top:.5rem"><label>URL GitHub Pages</label><input id="pmBase" value="${esc(cfg.baseUrl||'')}"></div>`,
     `<button class="btn btn-primary" onclick="updateParam()">💾 Enregistrer</button><button class="btn btn-ghost" onclick="closeModal()">Annuler</button>`);
 }
 function updateParam(){
@@ -3935,11 +3936,11 @@ function renderUsers(){
   const ROLE_COLOR={'enseignant':'var(--bleu2)','evaluateur':'var(--teal)','les-deux':'var(--orange)'};
   c.innerHTML=users.map((u,i)=>{
     const role=u.role||'les-deux';
-    const classesStr=u.classes?.length?u.classes.join(', '):'<em style="color:var(--gris)">Aucune classe</em>';
+    const classesStr=u.classes?.length?u.classes.map(c=>esc(c)).join(', '):'<em style="color:var(--gris)">Aucune classe</em>';
     return `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--gris2);border-radius:var(--r2);margin-bottom:.5rem;border-left:4px solid ${u.actif!==false?ROLE_COLOR[role]||'var(--vert)':'var(--gris)'}">
       <div style="flex:1">
-        <div style="font-weight:800;font-size:.9rem">${u.nom} <span class="badge" style="font-size:.6rem;background:${ROLE_COLOR[role]||'var(--gris)'};color:#fff;padding:.1rem .4rem;border-radius:4px">${ROLE_LBL[role]||role}</span></div>
-        <div style="font-size:.72rem;color:var(--gris);font-family:'JetBrains Mono',monospace">${u.cle}</div>
+        <div style="font-weight:800;font-size:.9rem">${esc(u.nom)} <span class="badge" style="font-size:.6rem;background:${ROLE_COLOR[role]||'var(--gris)'};color:#fff;padding:.1rem .4rem;border-radius:4px">${ROLE_LBL[role]||role}</span></div>
+        <div style="font-size:.72rem;color:var(--gris);font-family:'JetBrains Mono',monospace">${esc(u.cle)}</div>
         <div style="font-size:.7rem;color:var(--bleu2);margin-top:.2rem">📚 ${classesStr}</div>
       </div>
       <button class="btn btn-primary btn-xs" onclick="showEditUser(${i})">✏️</button>
@@ -3954,7 +3955,7 @@ function renderClasses(){
   if(!classes.length){c.innerHTML='<div class="alert al-info">Aucune classe définie.</div>';return;}
   c.innerHTML=classes.map((cl,i)=>`
     <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .6rem;background:var(--bleu3);border-radius:20px;font-size:.78rem;font-weight:700;color:var(--bleu);margin:.15rem;">
-      ${cl}
+      ${esc(cl)}
       <span style="cursor:pointer;opacity:.6" onclick="delClasse(${i})" title="Supprimer">✕</span>
     </span>
   `).join('');
@@ -3966,9 +3967,9 @@ function renderAdminJournal(){
   c.innerHTML=adminJournal.slice(0,50).map(j=>`
     <div style="padding:.4rem;border-bottom:1px solid var(--gris3);font-size:.75rem">
       <span style="color:var(--gris)">${dateFR(j.ts)} ${new Date(j.ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>
-      <strong style="color:var(--bleu2);margin:0 .3rem">${j.qui}</strong>
-      <span>${j.action}</span>
-      ${j.detail?`<span style="color:var(--gris)"> — ${j.detail}</span>`:''}
+      <strong style="color:var(--bleu2);margin:0 .3rem">${esc(j.qui)}</strong>
+      <span>${esc(j.action)}</span>
+      ${j.detail?`<span style="color:var(--gris)"> — ${esc(j.detail)}</span>`:''}
     </div>
   `).join('');
 }
@@ -3990,7 +3991,7 @@ async function renderAdminBackups(){
   }).join('');
 }
 function showAddUser(){
-  const cks=classes.map((cl,i)=>`<label style="display:flex;align-items:center;gap:.3rem;font-size:.8rem;cursor:pointer"><input type="checkbox" id="uc${i}" value="${cl}"> ${cl}</label>`).join('');
+  const cks=classes.map((cl,i)=>`<label style="display:flex;align-items:center;gap:.3rem;font-size:.8rem;cursor:pointer"><input type="checkbox" id="uc${i}" value="${esc(cl)}"> ${esc(cl)}</label>`).join('');
   const droitsCks=Object.entries(DROITS_LABELS).map(([k,lbl])=>`<label style="display:flex;align-items:center;gap:.3rem;font-size:.78rem;cursor:pointer"><input type="checkbox" id="ud_${k}" ${DROITS_DEFAUT[k]?'checked':''}> ${lbl}</label>`).join('');
   showModal('➕ Nouvel enseignant / évaluateur',`
     <div class="fr"><label>Nom complet</label><input id="uNom" placeholder="J. Martin"></div>
@@ -4024,15 +4025,15 @@ function doAddUser(){
   // Afficher la clé
   setTimeout(()=>{
     showModal('🔑 Clé générée',`
-      <p style="margin-bottom:.5rem">Transmettez cette clé à <strong>${nom}</strong> :</p>
-      <div style="background:var(--bleu3);padding:1rem;border-radius:var(--r2);font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:800;text-align:center;color:var(--bleu);letter-spacing:2px">${cle}</div>
+      <p style="margin-bottom:.5rem">Transmettez cette clé à <strong>${esc(nom)}</strong> :</p>
+      <div style="background:var(--bleu3);padding:1rem;border-radius:var(--r2);font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:800;text-align:center;color:var(--bleu);letter-spacing:2px">${esc(cle)}</div>
       <p style="font-size:.75rem;color:var(--gris);margin-top:.5rem">⚠️ Cette clé ne sera plus affichée. Notez-la ou envoyez-la maintenant.</p>
     `,`<button class="btn btn-primary" onclick="navigator.clipboard?.writeText('${cle}');toast('Copié!','ok')">📋 Copier</button><button class="btn btn-ghost" onclick="closeModal()">Fermer</button>`);
   },300);
 }
 function showEditUser(i){
   const u=users[i];if(!u)return;
-  const cks=classes.map((cl,j)=>`<label style="display:flex;align-items:center;gap:.3rem;font-size:.8rem;cursor:pointer"><input type="checkbox" id="uce${j}" value="${cl}" ${u.classes?.includes(cl)?'checked':''}> ${cl}</label>`).join('');
+  const cks=classes.map((cl,j)=>`<label style="display:flex;align-items:center;gap:.3rem;font-size:.8rem;cursor:pointer"><input type="checkbox" id="uce${j}" value="${esc(cl)}" ${u.classes?.includes(cl)?'checked':''}> ${esc(cl)}</label>`).join('');
   const droitsCks=Object.entries(DROITS_LABELS).map(([k,lbl])=>`<label style="display:flex;align-items:center;gap:.3rem;font-size:.78rem;cursor:pointer"><input type="checkbox" id="ude_${k}" ${u.droits?.[k]?'checked':''}> ${lbl}</label>`).join('');
   const curRole=u.role||'les-deux';
   showModal(`✏️ ${esc(u.nom)}`,`
@@ -4233,9 +4234,9 @@ function afficherEvalTuteur(code){
     html+='<div class="card" style="border-left:4px solid var(--teal);margin-bottom:.75rem"><div style="font-weight:900;color:var(--teal);font-size:.85rem;margin-bottom:.5rem">🏢 Évaluation Tuteur (format simplifié)</div>';
     valsTuteur.forEach(v=>{
       html+=`<div style="display:flex;gap:.3rem;align-items:center;margin-bottom:.3rem;font-size:.78rem">
-        <span style="font-weight:700">${v.competence}</span>
-        <span style="background:${NV_CLR[v.niveau]||'var(--gris2)'};padding:.1rem .4rem;border-radius:12px;font-size:.68rem;font-weight:700">${v.niveau}</span>
-        <span style="color:var(--gris);font-size:.65rem">${v.evaluateur||'—'}</span>
+        <span style="font-weight:700">${esc(v.competence)}</span>
+        <span style="background:${NV_CLR[v.niveau]||'var(--gris2)'};padding:.1rem .4rem;border-radius:12px;font-size:.68rem;font-weight:700">${esc(v.niveau)}</span>
+        <span style="color:var(--gris);font-size:.65rem">${esc(v.evaluateur||'—')}</span>
       </div>`;
     });
     html+='</div>';
@@ -4278,7 +4279,7 @@ function afficherEvalTuteur(code){
   const profObsVal=profObs?profObs.niveau:'';
   html+=`<div style="margin-top:.6rem"><div style="font-size:.75rem;font-weight:800;color:var(--bleu);margin-bottom:.3rem">Observation prof :</div>`;
   html+=`<textarea id="profStageObs_${code}" rows="2" placeholder="Mon appréciation du stage..." `
-    +`style="width:100%;padding:.4rem .5rem;border:1px solid #ddd;border-radius:6px;font-size:.78rem;resize:vertical;box-sizing:border-box">${profObsVal}</textarea>`;
+    +`style="width:100%;padding:.4rem .5rem;border:1px solid #ddd;border-radius:6px;font-size:.78rem;resize:vertical;box-sizing:border-box">${esc(profObsVal)}</textarea>`;
   html+=`<button type="button" onclick="saveProfStageObs('${code}')" `
     +`style="margin-top:.3rem;padding:.3rem .7rem;background:var(--bleu2);color:#fff;border:none;border-radius:6px;font-size:.72rem;font-weight:700;cursor:pointer">💾 Enregistrer observation</button>`;
   html+=`</div></div>`;
@@ -4376,7 +4377,7 @@ async function startScanner(){
     _scanTimer=setInterval(()=>scanFrame(),300);
   }catch(e){
     const st=document.getElementById('scanStatus');
-    if(st)st.innerHTML='<span style="color:var(--rouge)">⚠️ Caméra non disponible — '+e.message+'</span>';
+    if(st)st.innerHTML='<span style="color:var(--rouge)">⚠️ Caméra non disponible — '+esc(e.message)+'</span>';
   }
 }
 

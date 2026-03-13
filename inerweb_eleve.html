@@ -39,7 +39,7 @@ input, select, textarea, button { font-family:inherit; }
 .login-input { width:100%; padding:1rem; border:2px solid var(--gris3); border-radius:var(--r); font-size:1rem; font-weight:700; text-align:center; letter-spacing:2px; text-transform:uppercase; margin-bottom:1rem; transition:var(--t); }
 .login-input:focus { outline:none; border-color:var(--violet); }
 .login-input::placeholder { letter-spacing:0; text-transform:none; color:var(--gris); }
-.login-btn { width:100%; padding:1rem; background:linear-gradient(135deg, var(--violet), var(--bleu2)); color:#fff; border:none; border-radius:var(--r); font-size:1rem; font-weight:800; cursor:pointer; transition:var(--t); }
+.login-btn { width:100%; padding:1rem; background:linear-gradient(135deg, var(--violet), var(--bleu2)); color:#fff; border:none; border-radius:var(--r); font-size:1rem; font-weight:800; cursor:pointer; transition:var(--t); min-height:44px; }
 .login-btn:hover { transform:translateY(-2px); box-shadow:var(--ombre); }
 .login-help { font-size:.75rem; color:var(--gris); margin-top:1rem; }
 .login-help a { color:var(--violet); }
@@ -54,12 +54,12 @@ input, select, textarea, button { font-family:inherit; }
 .hdr-info { flex:1; }
 .hdr-name { font-size:1.1rem; font-weight:800; }
 .hdr-class { font-size:.75rem; opacity:.8; }
-.hdr-sync { background:rgba(255,255,255,.15); border:none; color:#fff; padding:.4rem .6rem; border-radius:var(--r2); font-size:1rem; cursor:pointer; }
+.hdr-sync { background:rgba(255,255,255,.15); border:none; color:#fff; padding:.4rem .6rem; border-radius:var(--r2); font-size:1rem; cursor:pointer; min-height:44px; min-width:44px; }
 .hdr-sync.syncing { animation:spin 1s linear infinite; }
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 
 .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:#fff; display:flex; box-shadow:0 -2px 20px rgba(0,0,0,.1); z-index:100; padding-bottom:env(safe-area-inset-bottom); }
-.nav-item { flex:1; padding:.75rem .5rem; text-align:center; border:none; background:none; cursor:pointer; transition:var(--t); color:var(--gris); }
+.nav-item { flex:1; padding:.75rem .5rem; text-align:center; border:none; background:none; cursor:pointer; transition:var(--t); color:var(--gris); min-height:44px; }
 .nav-item.active { color:var(--violet); }
 .nav-ico { font-size:1.3rem; display:block; margin-bottom:.15rem; }
 .nav-lbl { font-size:.65rem; font-weight:700; }
@@ -112,9 +112,17 @@ input, select, textarea, button { font-family:inherit; }
 .journal-day-content { padding:1rem; }
 
 .journal-entry { padding:.75rem; background:var(--gris2); border-radius:var(--r2); margin-bottom:.5rem; border-left:3px solid var(--violet); }
+.journal-entry.pending { border:2px dashed var(--orange); background:#fff5eb; border-left:3px solid var(--orange); }
 .journal-entry-time { font-size:.7rem; color:var(--gris); font-weight:700; }
 .journal-entry-type { font-size:.65rem; background:var(--violet2); color:var(--violet); padding:.1rem .4rem; border-radius:4px; font-weight:700; margin-left:.5rem; }
 .journal-entry-text { font-size:.85rem; line-height:1.5; margin-top:.3rem; }
+.badge-pending { display:inline-block; font-size:.6rem; background:var(--orange); color:#fff; padding:.1rem .4rem; border-radius:4px; font-weight:800; margin-left:.3rem; }
+.journal-entry-actions { display:flex; gap:.4rem; margin-top:.5rem; }
+.journal-entry-actions button { padding:.3rem .6rem; border:none; border-radius:var(--r2); font-size:.72rem; font-weight:700; cursor:pointer; min-height:44px; transition:var(--t); }
+.btn-edit-entry { background:var(--bleu3); color:var(--bleu); }
+.btn-edit-entry:hover { background:var(--bleu2); color:#fff; }
+.btn-del-entry { background:var(--rouge2); color:var(--rouge); }
+.btn-del-entry:hover { background:var(--rouge); color:#fff; }
 
 .photos-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:.5rem; margin-top:.75rem; }
 .photo-thumb { aspect-ratio:1; border-radius:var(--r2); overflow:hidden; cursor:pointer; position:relative; }
@@ -141,7 +149,7 @@ input, select, textarea, button { font-family:inherit; }
 .form-group textarea, .form-group select { width:100%; padding:.75rem; border:2px solid var(--gris3); border-radius:var(--r2); font-size:.9rem; resize:none; }
 .form-group textarea:focus, .form-group select:focus { outline:none; border-color:var(--violet); }
 
-.btn { padding:.7rem 1.2rem; border:none; border-radius:var(--r2); font-size:.85rem; font-weight:700; cursor:pointer; transition:var(--t); }
+.btn { padding:.7rem 1.2rem; border:none; border-radius:var(--r2); font-size:.85rem; font-weight:700; cursor:pointer; transition:var(--t); min-height:44px; }
 .btn-violet { background:var(--violet); color:#fff; }
 .btn-violet:hover { opacity:.9; }
 .btn-ghost { background:var(--gris2); color:var(--texte); }
@@ -170,6 +178,7 @@ input, select, textarea, button { font-family:inherit; }
 .toast.ok { background:var(--vert2); color:#1a7d3e; }
 .toast.err { background:var(--rouge2); color:var(--rouge); }
 .toast.inf { background:var(--bleu3); color:var(--bleu); }
+.toast.warn { background:var(--jaune2); color:#7a5000; }
 @keyframes slideIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
 
 .alert { padding:.75rem 1rem; border-radius:var(--r2); font-size:.85rem; margin-bottom:.75rem; }
@@ -397,7 +406,7 @@ input, select, textarea, button { font-family:inherit; }
     <div id="journalList"></div>
   </div>
 
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" role="navigation" aria-label="Navigation principale">
     <button class="nav-item active" data-page="home" onclick="switchPage('home')"><span class="nav-ico">🏠</span><span class="nav-lbl">Accueil</span></button>
     <button class="nav-item" data-page="progress" onclick="switchPage('progress')"><span class="nav-ico">📊</span><span class="nav-lbl">Compétences</span></button>
     <button class="nav-item" data-page="calendrier" onclick="switchPage('calendrier')"><span class="nav-ico">📅</span><span class="nav-lbl">Calendrier</span></button>
@@ -412,8 +421,20 @@ input, select, textarea, button { font-family:inherit; }
 </div>
 
 <div class="spinner-ov" id="spinnerOv"><div class="spinner"></div></div>
-<div class="toast-c" id="toastC"></div>
+<div class="toast-c" id="toastC" aria-live="polite"></div>
 
+<!-- Modale de confirmation (remplace confirm()) -->
+<div id="confirmModal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#fff;border-radius:14px;padding:1.5rem;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <div id="confirmMsg" style="font-size:.95rem;font-weight:700;color:var(--texte);margin-bottom:1.25rem"></div>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn-ghost" style="flex:1" onclick="resolveConfirm(false)">Annuler</button>
+      <button class="btn btn-violet" style="flex:1" id="confirmOkBtn" onclick="resolveConfirm(true)">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/core.js"></script>
 <script>
 const COMP_E31=[{code:"C3.1",nom:"Organiser le poste de travail"},{code:"C3.2",nom:"Implanter les équipements"},{code:"C3.3",nom:"Façonner les réseaux de tubes"},{code:"C3.4",nom:"Raccorder les circuits fluidiques"},{code:"C3.5",nom:"Raccorder les circuits électriques"},{code:"C4.1",nom:"Tirer au vide"},{code:"C4.2",nom:"Charger en fluide frigorigène"},{code:"C4.3",nom:"Contrôler l'étanchéité"},{code:"C4.4",nom:"Mettre en service l'installation"},{code:"C5.1",nom:"Diagnostiquer un dysfonctionnement"},{code:"C5.2",nom:"Remplacer un composant"},{code:"C1.2",nom:"Rédiger les comptes rendus"}];
 const COMP_E32=[{code:"C5.1",nom:"Diagnostiquer un dysfonctionnement"},{code:"C5.2",nom:"Remplacer un composant"},{code:"C5.3",nom:"Réaliser une maintenance préventive"},{code:"C5.4",nom:"Vérifier la conformité réglementaire"},{code:"C6.1",nom:"Analyser les performances énergétiques"},{code:"C6.2",nom:"Proposer des améliorations"},{code:"C6.3",nom:"Mettre en œuvre une amélioration"},{code:"C1.1",nom:"Collecter et interpréter les données"},{code:"C1.2",nom:"Rédiger les comptes rendus"}];
@@ -431,6 +452,9 @@ function esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').repl
 function safeParse(str,fallback){try{return JSON.parse(str);}catch(e){console.warn('[eleve] JSON.parse échoué :',e.message);return fallback;}}
 
 function toast(msg,type='inf'){const c=document.getElementById('toastC'),t=document.createElement('div');t.className='toast '+type;t.textContent=msg;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},3000);}
+let _confirmResolve=null;
+function confirmAsync(msg){return new Promise(resolve=>{_confirmResolve=resolve;document.getElementById('confirmMsg').textContent=msg;document.getElementById('confirmModal').style.display='flex';});}
+function resolveConfirm(val){document.getElementById('confirmModal').style.display='none';if(_confirmResolve){_confirmResolve(val);_confirmResolve=null;}}
 function showSpinner(){document.getElementById('spinnerOv').classList.add('active');}
 function hideSpinner(){document.getElementById('spinnerOv').classList.remove('active');}
 function dateFR(iso){if(!iso)return'—';try{return new Date(iso).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});}catch{return String(iso).slice(0,10);}}
@@ -480,7 +504,7 @@ function removePendingPhoto(idx){pendingPhotos.splice(idx,1);renderPendingPhotos
 function renderPendingPhotos(){
   const c=document.getElementById('uploadPreview');
   if(!pendingPhotos.length){c.innerHTML='';return;}
-  c.innerHTML=pendingPhotos.map((p,i)=>`<div class="upload-preview-item"><img src="${p}" alt="Photo ${esc(String(i+1))}"><button class="upload-preview-remove" onclick="removePendingPhoto(${i})">✕</button></div>`).join('');
+  c.innerHTML=pendingPhotos.map((p,i)=>`<div class="upload-preview-item"><img src="${esc(p)}" alt="Photo ${esc(String(i+1))}"><button class="upload-preview-remove" onclick="removePendingPhoto(${i})">✕</button></div>`).join('');
 }
 
 const uploadZone=document.getElementById('uploadZone');
@@ -500,6 +524,31 @@ async function addJournalEntry(){
   syncCloud();
 }
 
+function editJournalEntry(id){
+  const idx=journal.findIndex(j=>j.id===id);
+  if(idx===-1)return;
+  const entry=journal[idx];
+  if(entry.synced){toast('Impossible de modifier une entrée déjà synchronisée','err');return;}
+  document.getElementById('journalType').value=entry.type;
+  document.getElementById('journalText').value=entry.text||'';
+  pendingPhotos=[...(entry.photos||[])];
+  renderPendingPhotos();
+  journal.splice(idx,1);
+  saveLocal();renderJournal();
+  toast('Entrée chargée pour modification','inf');
+  document.getElementById('page-journal').scrollTo({top:0,behavior:'smooth'});
+}
+
+function deleteJournalEntry(id){
+  const idx=journal.findIndex(j=>j.id===id);
+  if(idx===-1)return;
+  const entry=journal[idx];
+  if(entry.synced){toast('Impossible de supprimer une entrée déjà synchronisée','err');return;}
+  journal.splice(idx,1);
+  saveLocal();renderJournal();updatePhotoCounter();
+  toast('Entrée supprimée','inf');
+}
+
 function renderJournal(){
   const c=document.getElementById('journalList');
   if(!journal.length){c.innerHTML='<div class="empty"><div class="empty-ico">📓</div><div>Ton journal est vide.<br>Commence à noter tes activités !</div></div>';return;}
@@ -514,8 +563,12 @@ function renderJournal(){
 }
 
 function renderJournalEntry(e){
-  const photosHtml=e.photos?.length?`<div class="photos-grid">${e.photos.map((p,i)=>`<div class="photo-thumb" onclick="openPhoto(this.querySelector('img').src)"><img src="${p}" alt="Photo"></div>`).join('')}</div>`:'';
-  return`<div class="journal-entry"><div class="journal-entry-time">${timeHM(e.date)}<span class="journal-entry-type">${TYPE_LBL[e.type]||esc(e.type)}</span>${e.synced?'<span style="color:var(--vert);margin-left:.3rem">✓</span>':'<span style="color:var(--orange);margin-left:.3rem">⏳</span>'}</div>${e.text?`<div class="journal-entry-text">${esc(e.text)}</div>`:''}${photosHtml}</div>`;
+  const photosHtml=e.photos?.length?`<div class="photos-grid">${e.photos.map((p,i)=>`<div class="photo-thumb" onclick="openPhoto(this.querySelector('img').src)"><img src="${esc(p)}" alt="Photo"></div>`).join('')}</div>`:'';
+  const pendingClass=e.synced?'':'pending';
+  const pendingBadge=e.synced?'':'<span class="badge-pending">En attente</span>';
+  const syncIcon=e.synced?'<span style="color:var(--vert);margin-left:.3rem">✓</span>':'<span style="color:var(--orange);margin-left:.3rem">⏳</span>';
+  const actionsHtml=e.synced?'':`<div class="journal-entry-actions"><button class="btn-edit-entry" onclick="editJournalEntry('${esc(e.id)}')">✏️ Modifier</button><button class="btn-del-entry" onclick="deleteJournalEntry('${esc(e.id)}')">🗑️ Supprimer</button></div>`;
+  return`<div class="journal-entry ${pendingClass}"><div class="journal-entry-time">${timeHM(e.date)}<span class="journal-entry-type">${TYPE_LBL[e.type]||esc(e.type)}</span>${syncIcon}${pendingBadge}</div>${e.text?`<div class="journal-entry-text">${esc(e.text)}</div>`:''}${photosHtml}${actionsHtml}</div>`;
 }
 
 function openPhoto(src){openPhotoModal(src);}
@@ -564,7 +617,7 @@ function loadDemoData(){
   ];
 }
 
-function doLogout(){if(confirm('Te déconnecter ?')){localStorage.removeItem(SK);location.reload();}}
+async function doLogout(){if(await confirmAsync('Te déconnecter ?')){localStorage.removeItem(SK);location.reload();}}
 function startApp(){document.getElementById('loginScreen').classList.add('hidden');document.getElementById('appContainer').classList.add('active');renderAll();}
 
 async function syncCloud(){
@@ -582,8 +635,8 @@ async function syncCloud(){
         if(d.photoUrls&&d.photoUrls.length){entry.photos=d.photoUrls;}
       }
     }
-    saveLocal();renderJournal();toast('Synchronisé ✓','ok');
-  }catch(err){console.error('Sync error:',err);toast('Erreur sync','err');}
+    saveLocal();renderJournal();toast('Synchronisation réussie','ok');
+  }catch(err){console.error('Sync error:',err);toast('Erreur de synchronisation — réessaie plus tard','err');}
   btn.classList.remove('syncing');
 }
 
@@ -742,7 +795,7 @@ function ecalShowDay(ds){
       html+=`<div style="background:var(--violet2);border-radius:var(--r2);padding:.5rem .6rem;margin-bottom:.3rem;border-left:3px solid var(--violet)">
         <div style="font-size:.7rem;color:var(--gris)">${timeHM(j.date)} <span style="background:var(--violet);color:#fff;padding:.1rem .3rem;border-radius:4px;font-size:.6rem;font-weight:700">${TYPE_LBL[j.type]||esc(j.type)}</span></div>
         ${j.text?`<div style="font-size:.82rem;margin-top:.2rem">${esc(j.text)}</div>`:''}
-        ${j.photos&&j.photos.length?`<div style="display:flex;gap:.3rem;margin-top:.3rem;flex-wrap:wrap">${j.photos.map(p=>`<img src="${p}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;cursor:pointer" onclick="openPhotoModal(this.src)">`).join('')}</div>`:''}
+        ${j.photos&&j.photos.length?`<div style="display:flex;gap:.3rem;margin-top:.3rem;flex-wrap:wrap">${j.photos.map(p=>`<img src="${esc(p)}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;cursor:pointer" onclick="openPhotoModal(this.src)">`).join('')}</div>`:''}
       </div>`;
     });
   }
@@ -856,8 +909,8 @@ function ajouterDocEleve(input){
   reader.readAsDataURL(f);
 }
 
-function supprimerDocEleve(idx){
-  if(!confirm('Supprimer ce document ?'))return;
+async function supprimerDocEleve(idx){
+  if(!await confirmAsync('Supprimer ce document ?'))return;
   eleveDocs.splice(idx,1);
   saveLocal();renderDocsEleve();
   toast('Document supprimé','inf');
@@ -869,7 +922,7 @@ async function exportPDF(){
   const byDay={};journal.forEach(j=>{const day=j.date?.slice(0,10)||'inconnu';if(!byDay[day])byDay[day]=[];byDay[day].push(j);});
   const days=Object.keys(byDay).sort();
   let html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Journal de stage - ${esc(eleve.prenom)} ${esc(eleve.nom)}</title><style>body{font-family:Arial,sans-serif;font-size:12px;padding:20px}h1{color:#1b3a63;border-bottom:2px solid #8e44ad;padding-bottom:10px}.info{background:#f0f2f5;padding:15px;border-radius:8px;margin-bottom:20px}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.info-item label{font-weight:bold;color:#666;font-size:10px;display:block}.day{margin-bottom:20px;page-break-inside:avoid}.day-title{background:#8e44ad;color:white;padding:8px 12px;border-radius:6px 6px 0 0}.day-content{border:1px solid #ddd;border-top:none;padding:12px;border-radius:0 0 6px 6px}.entry{margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed #ddd}.entry:last-child{border-bottom:none}.entry-time{color:#666;font-size:10px}.entry-type{background:#f3e5f5;color:#8e44ad;padding:2px 6px;border-radius:4px;font-size:10px;margin-left:8px}.entry-text{margin-top:6px}.photos{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.photos img{width:120px;height:120px;object-fit:cover;border-radius:6px}@media print{.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px"><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer">🖨️ Imprimer / Enregistrer PDF</button></div><h1>📓 Journal de stage</h1><div class="info"><div class="info-grid"><div class="info-item"><label>Élève</label>${esc(eleve.prenom)} ${esc(eleve.nom)}</div><div class="info-item"><label>Classe</label>${esc(eleve.classe)}</div><div class="info-item"><label>Entreprise</label>${esc(eleve.entreprise_nom||'—')}</div><div class="info-item"><label>Tuteur</label>${esc(eleve.tuteur_nom||'—')}</div><div class="info-item"><label>Période</label>${dateShort(eleve.pfmp_debut)} → ${dateShort(eleve.pfmp_fin)}</div><div class="info-item"><label>Entrées</label>${journal.length}</div></div></div>`;
-  for(const day of days){const entries=byDay[day].sort((a,b)=>new Date(a.date)-new Date(b.date));html+=`<div class="day"><div class="day-title">📅 ${dateFR(day)}</div><div class="day-content">`;for(const e of entries){html+=`<div class="entry"><div class="entry-time">${timeHM(e.date)} <span class="entry-type">${TYPE_LBL[e.type]||esc(e.type)}</span></div>${e.text?`<div class="entry-text">${esc(e.text)}</div>`:''}${e.photos?.length?`<div class="photos">${e.photos.map(p=>`<img src="${p}">`).join('')}</div>`:''}</div>`;}html+=`</div></div>`;}
+  for(const day of days){const entries=byDay[day].sort((a,b)=>new Date(a.date)-new Date(b.date));html+=`<div class="day"><div class="day-title">📅 ${dateFR(day)}</div><div class="day-content">`;for(const e of entries){html+=`<div class="entry"><div class="entry-time">${timeHM(e.date)} <span class="entry-type">${TYPE_LBL[e.type]||esc(e.type)}</span></div>${e.text?`<div class="entry-text">${esc(e.text)}</div>`:''}${e.photos?.length?`<div class="photos">${e.photos.map(p=>`<img src="${esc(p)}">`).join('')}</div>`:''}</div>`;}html+=`</div></div>`;}
   html+=`<p style="text-align:center;color:#666;margin-top:30px;font-size:10px">Généré le ${new Date().toLocaleDateString('fr-FR')} via inerWeb TT MFER</p></body></html>`;
   printWindow.document.write(html);printWindow.document.close();hideSpinner();
 }

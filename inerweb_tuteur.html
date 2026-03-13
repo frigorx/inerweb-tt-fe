@@ -220,6 +220,24 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
 /* Conseil box */
 .leg-conseil{background:#fff;border:2px solid var(--gris3);border-radius:var(--r2);padding:.55rem .75rem;font-size:.73rem;line-height:1.5;color:var(--texte);margin-bottom:.4rem;display:flex;align-items:flex-start;gap:.5rem;}
 .leg-conseil-ico{font-size:1rem;flex-shrink:0;margin-top:1px;}
+
+/* ═══ BARRE DE PROGRESSION ═══ */
+.progress-bar-wrap{background:var(--gris3);border-radius:20px;height:22px;overflow:hidden;margin-bottom:.75rem;position:relative;}
+.progress-bar-fill{height:100%;border-radius:20px;transition:width .4s ease;background:linear-gradient(90deg,var(--teal),var(--vert));}
+.progress-bar-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:900;color:var(--texte);}
+
+/* ═══ TARGETS TACTILES ═══ */
+.nb{min-height:44px!important;min-width:44px!important;}
+.tb{min-height:44px!important;min-width:44px!important;}
+
+/* ═══ MODALE CONFIRMATION ═══ */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9500;align-items:center;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal-box{background:#fff;border-radius:var(--r);padding:1.5rem;max-width:380px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.25);text-align:center;}
+.modal-box h3{font-size:1.05rem;font-weight:900;color:var(--bleu);margin-bottom:.75rem;}
+.modal-box p{font-size:.85rem;color:var(--gris);margin-bottom:1.25rem;line-height:1.5;}
+.modal-btns{display:flex;gap:.5rem;}
+.modal-btns .btn{flex:1;}
 </style>
 </head>
 <body>
@@ -520,9 +538,22 @@ video{width:100%;border-radius:var(--r);background:#000;display:block;}
   </div>
 </div>
 
-<div class="toast-c" id="toastC"></div>
+<div class="toast-c" id="toastC" aria-live="polite"></div>
 <div class="spin-ov" id="spinOv"><div class="spinner"></div></div>
 
+<!-- ═══ MODALE CONFIRMATION ENVOI ═══ -->
+<div class="modal-ov" id="modalConfirm">
+  <div class="modal-box">
+    <h3>📤 Confirmer l'envoi</h3>
+    <p id="modalMsg">Êtes-vous sûr de vouloir envoyer les évaluations ?</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="fermerModale()">Annuler</button>
+      <button class="btn btn-vert" onclick="confirmerEnvoi()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/core.js"></script>
 <script>
 /* ═══ ARCHITECTURE MULTI-FILIÈRE TUTEUR ═══ */
 
@@ -876,7 +907,7 @@ const sid=c=>c.replace(/\./g,'_'); // C3.1 → C3_1 (IDs sans points)
 function renderEval(){
   const c=document.getElementById('evalContenu');
   c.innerHTML='';
-  
+
   // Légende en haut
   const legendHtml=`<div class="card" style="margin-bottom:.75rem">
     <div class="card-title">📋 Légende des niveaux</div>
@@ -889,6 +920,20 @@ function renderEval(){
     </div>
   </div>`;
   c.innerHTML=legendHtml;
+
+  // Barre de progression (% critères validés M ou PM)
+  const actifProg=getActiveComps();
+  const totalComp=actifProg.comps.length;
+  let valides=0;
+  actifProg.comps.forEach(comp=>{
+    const niv=(evalData[comp.code]&&evalData[comp.code].niveau)||'NE';
+    if(niv==='M'||niv==='PM')valides++;
+  });
+  const pct=totalComp?Math.round(valides/totalComp*100):0;
+  const barEl=document.createElement('div');
+  barEl.className='progress-bar-wrap';
+  barEl.innerHTML=`<div class="progress-bar-fill" style="width:${pct}%"></div><div class="progress-bar-txt">${valides}/${totalComp} validés (${pct}%)</div>`;
+  c.appendChild(barEl);
   
   const actif=getActiveComps();
   const compsActives=actif.comps;
@@ -1031,13 +1076,31 @@ function setBehav(key,niveau){
   }
 }
 
+/* ═══ MODALE CONFIRMATION ═══ */
+function ouvrirModale(msg,onConfirm){
+  document.getElementById('modalMsg').textContent=msg||'Êtes-vous sûr de vouloir envoyer les évaluations ?';
+  document.getElementById('modalConfirm').classList.add('open');
+  window._modalOnConfirm=onConfirm||null;
+}
+function fermerModale(){
+  document.getElementById('modalConfirm').classList.remove('open');
+  window._modalOnConfirm=null;
+}
+function confirmerEnvoi(){
+  fermerModale();
+  if(window._modalOnConfirm)window._modalOnConfirm();
+}
+
 /* ═══ ENVOI ═══ */
-async function envoyer(){
+function envoyer(){
   if(!tuteurToken){
     toast('Session expirée — rescannez le QR','err');
     return;
   }
-  
+  ouvrirModale('Êtes-vous sûr de vouloir envoyer les évaluations ?',envoyerConfirme);
+}
+
+async function envoyerConfirme(){
   const obs=document.getElementById('obsGlobal').value.trim();
   const pfmp=document.getElementById('selPfmp').value;
   const phase=document.getElementById('selPhase').value;
@@ -1072,9 +1135,9 @@ async function envoyer(){
       throw new Error(d.error);
     }
     hideSpinner();
-    toast('Évaluation envoyée ✓ (en attente validation prof)','ok');
+    toast('Évaluation envoyée — en attente validation prof','ok');
     setTimeout(()=>{
-      if(confirm('Évaluer un autre stagiaire ?'))goPage('scan');
+      ouvrirModale('Évaluer un autre stagiaire ?',()=>goPage('scan'));
     },1500);
   }catch(e){
     hideSpinner();
