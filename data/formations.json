@@ -1,12 +1,44 @@
 {
-  "version": "5.2",
+  "version": "5.3",
   "date": "2026-03-13",
+  "niveaux_mapping": {
+    "edu_to_prog": { "1": "NA", "2": "EC", "3": "M", "4": "PM", "NE": "NE", "ABS": "NE" },
+    "prog_to_edu": { "NA": "1", "EC": "2", "M": "3", "PM": "4", "NE": "NE" }
+  },
   "formations": [
     {
       "id": "CAP_IFCA",
       "nom": "CAP Installateur en Froid et Conditionnement d'Air",
       "niveau": "CAP",
       "duree": "2 ans",
+      "aliases_classes": {
+        "CAP IFCA 1": "CAP1 IFCA",
+        "CAP IFCA 2": "CAP2 IFCA",
+        "CAP1 IFCA": "CAP IFCA 1",
+        "CAP2 IFCA": "CAP IFCA 2"
+      },
+      "sequences": {
+        "CAP1 IFCA": [
+          { "id": "S1", "nom": "Sécurité et environnement pro", "comps": ["CC1.1", "CC1.2"] },
+          { "id": "S2", "nom": "Mise en service", "comps": ["CC2.1", "CC2.3"] },
+          { "id": "S3", "nom": "Maintenance préventive", "comps": ["CC3.1", "CC3.2"] },
+          { "id": "S4", "nom": "Brasage et raccordement", "comps": ["CC3.4", "CC3.5"] }
+        ],
+        "CAP2 IFCA": [
+          { "id": "S1", "nom": "Diagnostic et dépannage", "comps": ["CC4.1", "CC4.2"] },
+          { "id": "S2", "nom": "Mise en service avancée", "comps": ["CC2.1", "CC2.3", "CC5.1"] }
+        ],
+        "CAP IFCA 1": [
+          { "id": "S1", "nom": "Sécurité et environnement pro", "comps": ["CC1.1", "CC1.2"] },
+          { "id": "S2", "nom": "Mise en service", "comps": ["CC2.1", "CC2.3"] },
+          { "id": "S3", "nom": "Maintenance préventive", "comps": ["CC3.1", "CC3.2"] },
+          { "id": "S4", "nom": "Brasage et raccordement", "comps": ["CC3.4", "CC3.5"] }
+        ],
+        "CAP IFCA 2": [
+          { "id": "S1", "nom": "Diagnostic et dépannage", "comps": ["CC4.1", "CC4.2"] },
+          { "id": "S2", "nom": "Mise en service avancée", "comps": ["CC2.1", "CC2.3", "CC5.1"] }
+        ]
+      },
       "epreuves": [
         {
           "code": "EP2",
@@ -293,6 +325,22 @@
       "nom": "Bac Pro Métiers du Froid et des Énergies Renouvelables",
       "niveau": "Bac Pro",
       "duree": "3 ans",
+      "aliases_classes": {
+        "Term MFER": "TMFER",
+        "TMFER": "Term MFER"
+      },
+      "sequences": {
+        "TMFER": [
+          { "id": "S1", "nom": "Systèmes thermodynamiques", "comps": ["C1.1", "C1.3"] },
+          { "id": "S2", "nom": "Énergies renouvelables — PAC", "comps": ["C2.1", "C2.2", "C5.1"] },
+          { "id": "S3", "nom": "Régulation et pilotage", "comps": ["C3.1", "C4.1"] }
+        ],
+        "Term MFER": [
+          { "id": "S1", "nom": "Systèmes thermodynamiques", "comps": ["C1.1", "C1.3"] },
+          { "id": "S2", "nom": "Énergies renouvelables — PAC", "comps": ["C2.1", "C2.2", "C5.1"] },
+          { "id": "S3", "nom": "Régulation et pilotage", "comps": ["C3.1", "C4.1"] }
+        ]
+      },
       "epreuves": [
         {
           "code": "E31",
@@ -679,6 +727,24 @@
       "nom": "2nde Transitions Numérique et Énergétique",
       "niveau": "2nde",
       "duree": "1 an",
+      "aliases_classes": {
+        "2nde TNE": "2TNE",
+        "2TNE": "2nde TNE"
+      },
+      "sequences": {
+        "2TNE": [
+          { "id": "S1", "nom": "Découverte installations frigorifiques", "comps": ["C1.1", "C1.2"] },
+          { "id": "S2", "nom": "Les fluides frigorigènes", "comps": ["C2.1", "C2.3"] },
+          { "id": "S3", "nom": "Circuit frigorifique simple", "comps": ["C3.1", "C3.2", "C5.1"] },
+          { "id": "S4", "nom": "Lecture de schémas", "comps": ["C1.2", "C4.1"] }
+        ],
+        "2nde TNE": [
+          { "id": "S1", "nom": "Découverte installations frigorifiques", "comps": ["C1.1", "C1.2"] },
+          { "id": "S2", "nom": "Les fluides frigorigènes", "comps": ["C2.1", "C2.3"] },
+          { "id": "S3", "nom": "Circuit frigorifique simple", "comps": ["C3.1", "C3.2", "C5.1"] },
+          { "id": "S4", "nom": "Lecture de schémas", "comps": ["C1.2", "C4.1"] }
+        ]
+      },
       "epreuves": [
         {
           "code": "CT",
@@ -754,6 +820,64 @@
       "periodes": [
         {"id": "P1", "nom": "Période 1 — Semestre 1", "type": "formatif"},
         {"id": "P2", "nom": "Période 2 — Semestre 2", "type": "formatif"}
+      ]
+    },
+    {
+      "id": "CFA_ETAM",
+      "nom": "CFA Étanchéité à l'Air et Membranes",
+      "niveau": "CFA",
+      "duree": "2 ans",
+      "aliases_classes": {},
+      "sequences": {
+        "CFA ÉTAM 1A": [
+          { "id": "S1", "nom": "Étanchéité à l'air", "comps": ["C1.1", "C2.1"] },
+          { "id": "S2", "nom": "Pose de membranes", "comps": ["C2.2", "C3.1"] }
+        ],
+        "CFA ÉTAM 2A": [
+          { "id": "S1", "nom": "Étanchéité — perfectionnement", "comps": ["C1.1", "C2.1", "C3.1"] }
+        ]
+      },
+      "epreuves": [],
+      "periodes": [
+        {"id": "P1", "nom": "Période 1 — 1ère année", "type": "formatif"},
+        {"id": "P2", "nom": "Période 2 — 2ème année", "type": "formatif"}
+      ]
+    },
+    {
+      "id": "CFA_MPI",
+      "nom": "CFA Monteur en Installations du Génie Climatique et Sanitaire",
+      "niveau": "CFA",
+      "duree": "2 ans",
+      "aliases_classes": {},
+      "sequences": {
+        "CFA MPI 1A": [
+          { "id": "S1", "nom": "Réseaux sanitaires", "comps": ["C1.1", "C1.2"] },
+          { "id": "S2", "nom": "Installation thermique", "comps": ["C2.1", "C3.1"] }
+        ],
+        "CFA MPI 2A": [
+          { "id": "S1", "nom": "Réseaux — perfectionnement", "comps": ["C1.1", "C1.2", "C3.1"] }
+        ]
+      },
+      "epreuves": [],
+      "periodes": [
+        {"id": "P1", "nom": "Période 1 — 1ère année", "type": "formatif"},
+        {"id": "P2", "nom": "Période 2 — 2ème année", "type": "formatif"}
+      ]
+    },
+    {
+      "id": "TP_SUP_CVC",
+      "nom": "TP Supérieur CVC",
+      "niveau": "TP Sup",
+      "duree": "1 an",
+      "aliases_classes": {},
+      "sequences": {
+        "TP Sup CVC": [
+          { "id": "S1", "nom": "Lecture de plans CVC", "comps": ["C1.2", "C4.1"] }
+        ]
+      },
+      "epreuves": [],
+      "periodes": [
+        {"id": "P1", "nom": "Période 1 — Année complète", "type": "formatif"}
       ]
     }
   ],

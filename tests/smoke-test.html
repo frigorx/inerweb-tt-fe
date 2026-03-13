@@ -31,6 +31,12 @@ h1{text-align:center;margin-bottom:.5rem;color:#fff;font-size:1.6rem}
      CHARGEMENT DES SCRIPTS DANS L'ORDRE DE PRODUCTION
      ═══════════════════════════════════════════════════════════ -->
 
+<!-- CORE convergence -->
+<script src="../js/core/events.js"></script>
+<script src="../js/core/events-bridge.js"></script>
+<script src="../js/core/sync-unified.js"></script>
+<script src="../js/shared/classes-registry.js"></script>
+
 <!-- Core -->
 <script src="../js/core/core.js"></script>
 <script src="../js/core/state.js"></script>
@@ -616,6 +622,84 @@ h1{text-align:center;margin-bottom:.5rem;color:#fff;font-size:1.6rem}
   });
   assert('T130 — window.getObs est une fonction', function(){
     return typeof window.getObs === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     19. EVENT LOG UNIFIÉ (iwEvents)
+     ═══════════════════════════════════════════════════════════ */
+  cat('19. Event Log Unifié (iwEvents)');
+
+  assert('T131 — window.iwEvents existe', function(){
+    return typeof window.iwEvents === 'object' && window.iwEvents !== null;
+  });
+  assert('T132 — iwEvents.pushEvent est une fonction', function(){
+    return typeof window.iwEvents.pushEvent === 'function';
+  });
+  assert('T133 — iwEvents.getAllEvents est une fonction', function(){
+    return typeof window.iwEvents.getAllEvents === 'function';
+  });
+  assert('T134 — iwEvents.getPendingEvents est une fonction', function(){
+    return typeof window.iwEvents.getPendingEvents === 'function';
+  });
+  assert('T135 — iwEvents.markSynced est une fonction', function(){
+    return typeof window.iwEvents.markSynced === 'function';
+  });
+  assert('T136 — iwEvents.getEventsByType est une fonction', function(){
+    return typeof window.iwEvents.getEventsByType === 'function';
+  });
+  assert('T137 — iwEvents.getEventsByCible est une fonction', function(){
+    return typeof window.iwEvents.getEventsByCible === 'function';
+  });
+  assert('T138 — iwEvents.pendingCount est une fonction', function(){
+    return typeof window.iwEvents.pendingCount === 'function';
+  });
+  assert('T139 — iwEvents.rebuildProjections est une fonction', function(){
+    return typeof window.iwEvents.rebuildProjections === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     20. SYNC UNIFIÉ (iwSync)
+     ═══════════════════════════════════════════════════════════ */
+  cat('20. Sync Unifié (iwSync)');
+
+  assert('T140 — window.iwSync existe', function(){
+    return typeof window.iwSync === 'object' && window.iwSync !== null;
+  });
+  assert('T141 — iwSync.configure est une fonction', function(){
+    return typeof window.iwSync.configure === 'function';
+  });
+  assert('T142 — iwSync.syncAll est une fonction', function(){
+    return typeof window.iwSync.syncAll === 'function';
+  });
+  assert('T143 — iwSync.startAutoSync est une fonction', function(){
+    return typeof window.iwSync.startAutoSync === 'function';
+  });
+  assert('T144 — iwSync.stopAutoSync est une fonction', function(){
+    return typeof window.iwSync.stopAutoSync === 'function';
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     21. REGISTRE CLASSES (iwClasses)
+     ═══════════════════════════════════════════════════════════ */
+  cat('21. Registre Classes (iwClasses)');
+
+  assert('T145 — window.iwClasses existe', function(){
+    return typeof window.iwClasses === 'object' && window.iwClasses !== null;
+  });
+  assert('T146 — iwClasses.getAll est une fonction', function(){
+    return typeof window.iwClasses.getAll === 'function';
+  });
+  assert('T147 — iwClasses.resolve est une fonction', function(){
+    return typeof window.iwClasses.resolve === 'function';
+  });
+  assert('T148 — iwClasses.getFormation est une fonction', function(){
+    return typeof window.iwClasses.getFormation === 'function';
+  });
+  assert('T149 — iwClasses.mapLevel est une fonction', function(){
+    return typeof window.iwClasses.mapLevel === 'function';
+  });
+  assert('T150 — iwClasses.onReady est une fonction', function(){
+    return typeof window.iwClasses.onReady === 'function';
   });
 
   /* ═══════════════════════════════════════════════════════════

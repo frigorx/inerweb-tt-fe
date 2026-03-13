@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="description" content="Portail CCF INERWEB PROG+ — Suivi des compétences et évaluation Filière Énergétique (CAP IFCA, Bac Pro MFER, 2nde TNE)">
-<title>INERWEB PROG+ — Filière Énergétique</title>
+<title>INERWEB — Plateforme pédagogique unifiée</title>
+<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ── Variables & reset ── */
@@ -208,6 +209,14 @@ body {
 .role-card:nth-child(1) { animation:fadeInUp .5s ease-out .1s both; }
 .role-card:nth-child(2) { animation:fadeInUp .5s ease-out .2s both; }
 .role-card:nth-child(3) { animation:fadeInUp .5s ease-out .3s both; }
+.role-card:nth-child(4) { animation:fadeInUp .5s ease-out .4s both; }
+
+.role-edu {
+  background:#f3e8ff;
+  border-color:#7C3AED;
+}
+.role-edu:hover { background:#e8d0ff; }
+.role-edu .role-ico { background:#7C3AED; }
 
 /* ── Responsive ── */
 @media (max-width:400px) {
@@ -227,15 +236,15 @@ body {
   <div class="logo">
     <span class="logo-ico" aria-hidden="true">❄️</span>
     <div class="logo-txt">
-      <h1>INERWEB PROG+</h1>
+      <h1>INERWEB</h1>
       <p>Filière Énergétique</p>
     </div>
   </div>
 
-  <span class="version-badge">Version 5.0 — Filière Énergétique</span>
+  <span class="version-badge">v6.0 — Plateforme unifiée</span>
 
   <p class="subtitle">
-    Suivi des compétences et évaluation CCF<br>
+    Pilotage pédagogique, suivi CCF, agenda & évaluation<br>
     CAP IFCA · Bac Pro MFER · 2nde TNE
   </p>
 
@@ -264,6 +273,14 @@ body {
         <p>Journal de stage, suivi personnel des compétences et progression</p>
       </div>
     </a>
+
+    <a href="edu/index.html" class="role-card role-edu">
+      <div class="role-ico" aria-hidden="true">📅</div>
+      <div class="role-info">
+        <h2>Agenda & Évaluation</h2>
+        <p>Pilotage quotidien — Agenda, validation séances, évaluation rapide</p>
+      </div>
+    </a>
   </nav>
 
   <!-- Liens rapides -->
@@ -287,6 +304,11 @@ body {
 </div>
 
 <script>
+/* Enregistrement du Service Worker */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(function(){});
+}
+
 /* Redirection automatique selon les paramètres URL (QR codes, deep links).
    Les valeurs sont encodées pour éviter l'injection de paramètres. */
 (function(){
@@ -306,6 +328,8 @@ body {
     var url = 'inerweb_eleve.html?eleve=' + encodeURIComponent(eleve);
     if (token) url += '&token=' + encodeURIComponent(token);
     window.location.href = url;
+  } else if (role === 'edu') {
+    window.location.href = 'edu/index.html';
   }
 })();
 </script>
