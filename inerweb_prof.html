@@ -1364,7 +1364,7 @@ async function deleteBackup(id){
 }
 function startAutoBackup(){
   if(backupInterval)clearInterval(backupInterval);
-  backupInterval=setInterval(async()=>{if(students.length>0){await createBackup(true);console.log('[AutoBackup]',new Date().toISOString());}},5*60*1000);
+  backupInterval=setInterval(async()=>{if(students.length>0){await createBackup(true);}},5*60*1000);
 }
 async function saveLocalData(){
   const data={id:'main',students,validations,notes,pfmpData,appCfg,customCriteria,compLocks,sharedDocs,lastSave:new Date().toISOString()};
@@ -1398,7 +1398,7 @@ function saveConfig(){
   const key=document.getElementById('cfgKey').value.trim();
   const nom=document.getElementById('cfgNom').value.trim();
   const base=document.getElementById('cfgBase').value.trim()||'https://frigorx.github.io/inerweb-tt-fe/';
-  if(!url||!key||!nom){alert('URL API, clé et nom obligatoires.');return;}
+  if(!url||!key||!nom){toast('URL API, clé et nom obligatoires.','err');return;}
   cfg={apiUrl:url,apiKey:key,nomProf:nom,baseUrl:base};
   localStorage.setItem(SCFG,JSON.stringify(cfg));
   startApp();
